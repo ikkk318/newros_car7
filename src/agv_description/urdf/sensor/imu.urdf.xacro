@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  IMU 模块：惯性测量单元（小方块）
+  ==================================================================
+  安装位置：车体几何中心正上方（x = 0, y = 0, z = imu_z = 0.100）。
+  尺寸、质量在顶层参数区定义。
+  对应 chapt8 fishbot_description 的 urdf/fishbot/sensor/imu.urdf.xacro。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入惯性宏库：提供圆柱/长方体/球体惯性计算 -->
+  <xacro:include filename="../common_inertia.xacro"/>
+
+  <!-- IMU 宏：生成 imu_link 与 imu_joint -->
+  <xacro:macro name="imu_xacro" params="">
+
+    <!-- IMU link：30 x 30 x 10 mm 小方块（视觉上与材质 c_laser 同色） -->
+    <link name="imu_link">
+      <visual>
+        <geometry><box size="0.03 0.03 0.01"/></geometry>
+        <material name="c_laser"/>
+      </visual>
+      <collision>
+        <geometry><box size="0.03 0.03 0.01"/></geometry>
+      </collision>
+      <xacro:inertia_box m="${imu_mass}" x="0.03" y="0.03" z="0.01" oz="0"/>
+    </link>
+
+    <!-- IMU 关节：fixed 固定到 base_link；位置 (0, 0, imu_z) -->
+    <joint name="imu_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="imu_link"/>
+      <origin xyz="0 0 ${imu_z}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>agv_web</name>
+  <version>0.1.0</version>
+  <description>AGV 网页控制台：浏览器内完成导航/搬运/任务/建图全部操作，并显示地图、障碍与实时位姿（替代终端控制台）</description>
+  <maintainer email="agv@example.com">AGV</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <!-- rcl_interfaces/Log：订阅 /rosout，把 task_manager / cargo_node 的
+       "[顶升] 成功/失败" 转发到网页运行日志。缺这个包时网关仍能启动
+       （代码里 try 兜底），但网页看不到其它节点的日志。 -->
+  <exec_depend>rcl_interfaces</exec_depend>
+  <exec_depend>agv_interfaces</exec_depend>
+  <exec_depend>agv_common</exec_depend>
+  <exec_depend>agv_bringup</exec_depend>
+  <exec_depend>python3-aiohttp</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

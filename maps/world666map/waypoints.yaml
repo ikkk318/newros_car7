@@ -1,0 +1,77 @@
+frame_id: map
+waypoints:
+  1号槽内:
+    kind: cargo
+    x: 3.0
+    y: 2.692
+    yaw: 0.0
+  1号货架:
+    kind: cargo
+    x: 1.63
+    y: 2.66
+    yaw: 0.0
+  1点:
+    kind: nav
+    x: 0.0
+    y: 0.0
+    yaw: 0.0
+  2号槽内:
+    kind: cargo
+    x: -8.937
+    y: -7.518
+    yaw: -3.085
+  2号货架:
+    kind: cargo
+    x: -7.57
+    y: -7.41
+    yaw: -3.08
+  2点:
+    kind: nav
+    x: -7.0
+    y: 2.4
+    yaw: 0.0
+  3号槽内:
+    kind: cargo
+    x: 2.926
+    y: -6.14
+    yaw: 0.0
+  3号货架:
+    kind: cargo
+    x: 1.56
+    y: -6.17
+    yaw: 0.0
+  3点:
+    kind: nav
+    x: -3.5
+    y: -3.3
+    yaw: 0.0
+  4号槽内:
+    kind: cargo
+    x: -8.626
+    y: 8.385
+    yaw: 1.552
+  4号货架:
+    kind: cargo
+    x: -8.62
+    y: 7.02
+    yaw: 1.55
+  4点:
+    kind: nav
+    x: -0.1
+    y: 5.0
+    yaw: 0.0
+  5号槽内:
+    kind: cargo
+    x: -9.18
+    y: -2.596
+    yaw: -3.099
+  5号货架:
+    kind: cargo
+    x: -7.81
+    y: -2.51
+    yaw: -3.1
+  起始点:
+    kind: cargo
+    x: 0.0
+    y: 0.0
+    yaw: 0.0

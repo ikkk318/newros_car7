@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+  惯性宏库：按几何形状计算常用转动惯量
+  ==================================================================
+  被其它模块文件通过 xacro:include 引用（可重复 include，宏会被覆盖定义，无副作用）。
+  所有宏的数学公式与原交付文件完全一致，数值不变。
+
+  命名约定：
+    inertia_box     长方体（x/y/z 为三边长，oz 为形心相对 link 原点的 z 偏移）
+    inertia_cyl_y   圆柱、轴向沿 Y（驱动轮）
+    inertia_cyl_z   圆柱、轴向沿 Z（激光雷达）
+    inertia_sphere  球体（万向轮）
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 长方体惯性：m 质量；x/y/z 三边长；oz 形心 z 偏移 -->
+  <xacro:macro name="inertia_box" params="m x y z oz">
+    <inertial>
+      <origin xyz="0 0 ${oz}" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0"
+               iyy="${m*(x*x+z*z)/12}" iyz="0"
+               izz="${m*(x*x+y*y)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- 圆柱惯性：轴向沿 Y（驱动轮轮轴方向） -->
+  <xacro:macro name="inertia_cyl_y" params="m r l">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+l*l)/12}" ixy="0" ixz="0"
+               iyy="${m*r*r/2}"           iyz="0"
+               izz="${m*(3*r*r+l*l)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- 圆柱惯性：轴向沿 Z（激光雷达外壳） -->
+  <xacro:macro name="inertia_cyl_z" params="m r l">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+l*l)/12}" ixy="0" ixz="0"
+               iyy="${m*(3*r*r+l*l)/12}" iyz="0"
+               izz="${m*r*r/2}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- 球体惯性：万向轮用 -->
+  <xacro:macro name="inertia_sphere" params="m r">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${2*m*r*r/5}" ixy="0" ixz="0"
+               iyy="${2*m*r*r/5}" iyz="0"
+               izz="${2*m*r*r/5}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>

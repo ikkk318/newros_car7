@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  万向轮模块：前后各一，位于车体中线上（y = 0）
+  ==================================================================
+  建模方式与交付版一致：球体 + (插件文件里的) 极低摩擦模拟「自由滑动」，
+  关节为 fixed，不真实建模旋转。
+  球半径、安装位置、质量均在顶层参数区定义。
+  对应 chapt8 fishbot_description 的 urdf/fishbot/actuator/caster.urdf.xacro。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入惯性宏库：提供圆柱/长方体/球体惯性计算 -->
+  <xacro:include filename="../common_inertia.xacro"/>
+
+  <!-- 万向轮宏：caster_name（caster_front / caster_rear）；cx = 纵向位置（沿 X） -->
+  <xacro:macro name="caster_xacro" params="caster_name cx">
+
+    <!-- 万向轮 link：灰色小球（滚动体，球心离地 caster_R） -->
+    <link name="${caster_name}">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="${caster_R}"/></geometry>
+        <material name="c_caster"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="${caster_R}"/></geometry>
+      </collision>
+      <xacro:inertia_sphere m="${caster_mass}" r="${caster_R}"/>
+    </link>
+
+    <!-- 万向轮关节：fixed 固定，位置 x = cx, y = 0, z = 球半径（球心贴地高度） -->
+    <joint name="${caster_name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${caster_name}"/>
+      <origin xyz="${cx} 0 ${caster_R}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

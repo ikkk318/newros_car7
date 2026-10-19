@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- ★ viewport 关键：手机不能缩放页面，否则按钮会小到点不中；
+     user-scalable=no 防止双指误缩放把布局搞乱 -->
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#12151c">
+<title>AGV 控制台</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<!-- ══════════ 登录遮罩（口令正确才进入） ══════════ -->
+<div id="login" class="login-mask">
+  <div class="login-box">
+    <h1>AGV 控制台</h1>
+    <p class="hint">请输入访问口令</p>
+    <input id="tokenInput" type="password" inputmode="text" autocomplete="current-password"
+           placeholder="口令" aria-label="访问口令">
+    <button id="loginBtn" class="btn-primary big">进入</button>
+    <p id="loginErr" class="err"></p>
+  </div>
+</div>
+
+<!-- ══════════ 主界面 ══════════ -->
+<div id="app" class="app hidden">
+
+  <!-- 顶栏：状态一眼可见 -->
+  <header class="topbar">
+    <div class="brand">AGV</div>
+    <div class="chips">
+      <span id="chipState" class="chip">—</span>
+      <span id="chipMode"  class="chip">—</span>
+      <span id="chipLink"  class="chip ok">连接中</span>
+    </div>
+    <button id="btnPanic" class="btn-panic" title="急停">急停</button>
+  </header>
+
+  <!-- 主体：地图 + 侧栏（手机上自动变上下布局） -->
+  <main class="main">
+
+    <!-- 地图区（RViz 等价：地图/障碍/小车/路径） -->
+    <section class="mapwrap">
+      <canvas id="map"></canvas>
+      <!-- 悬浮工具条：缩放与视图复位 -->
+      <div class="maptools">
+        <button data-act="zoomIn"  title="放大">＋</button>
+        <button data-act="zoomOut" title="缩小">－</button>
+        <button data-act="reset"   title="复位">◎</button>
+        <button data-act="follow" id="btnFollow" class="on" title="跟随小车">跟</button>
+      </div>
+      <!-- 图例 -->
+      <div class="legend">
+        <span><i class="sw free"></i>可通行</span>
+        <span><i class="sw occ"></i>障碍</span>
+        <span><i class="sw unk"></i>未知</span>
+        <span><i class="sw scan"></i>激光</span>
+        <span><i class="sw plan"></i>路径</span>
+      </div>
+      <div id="coord" class="coord">—</div>
+    </section>
+
+    <!-- 侧栏：操作卡片 + 日志 -->
+    <aside class="side">
+
+      <!-- ══════════ 实时仪表（固定 8 行） ══════════
+           ★ 为什么是固定 8 行、而不是"把日志塞进来"（用户原话）：
+             "数据面板显示的日志是固定死的，日志长的话看不到后面的信息。
+              ……数据面板，就显示一些重点状态标志。"
+           上一版把日志原文当面板内容，避障一行 60~80 字，360px 侧栏一格
+           只放得下约 32 字，最该看的"减到多少"被截掉，也没法展开。
+           现在这 7 个槽位写死：任务 / 速度 / 避障 / 定位 / 连接 / 地图 / 模式，
+           值由后端从**状态量**算出来（不是从日志里猜），所以文本天生很短，
+           且每秒刷新 —— 既不"固定死"，也不会"长了看不全"。
+           位置固定还有个好处：扫一眼就知道在哪看什么，不用每次找。 -->
+      <div class="card" id="cardBoard">
+        <div class="card-h">
+          <span>实时状态</span>
+          <span id="boardBadge" class="badge unk">—</span>
+        </div>
+        <div id="board" class="board"></div>
+      </div>
+
+      <!-- 模式：建图 / 导航，一条命令起网关后在这里切换 -->
+      <div class="card" id="cardStack">
+        <div class="card-h">
+          <span>工作模式</span>
+          <span id="stackBadge" class="badge">未启动</span>
+        </div>
+        <div class="row">
+          <button id="btnStartNav" class="btn-primary">启动导航</button>
+          <button id="btnStartMap" class="btn-ghost">开始建图</button>
+        </div>
+        <div class="row">
+          <button id="btnStackStop" class="btn-ghost danger">停止</button>
+          <button id="btnStackReload" class="btn-mini">刷新状态</button>
+        </div>
+        <p id="stackHint" class="hint small">
+          点上面按钮即可拉起来整套 ROS 栈，不用回终端敲命令。
+        </p>
+        <!-- ★ 退出：停掉整套栈并把网关自己也关掉。
+             和「停止」的区别：停止只停栈、网关还在（可以再点启动）；
+             退出是连网关一起走，相当于"我不用了，全部关掉"。
+             关浏览器窗口不会自动停栈（那样刷新页面就误停），
+             所以要停就点这里。 -->
+        <div class="row">
+          <button id="btnShutdown" class="btn-ghost danger">退出并关闭车</button>
+        </div>
+        <p class="hint small">
+          关掉浏览器不会自动停车（否则刷新页面就误停），要走就点上面这个。
+        </p>
+      </div>
+
+      <!-- 遥控：触屏十字键，按住即走 -->
+      <div class="card">
+        <div class="card-h">
+          <span>手动遥控</span>
+          <button id="btnLease" class="btn-lease">取得控制权</button>
+        </div>
+        <div class="dpad">
+          <button class="dbtn up"    data-tel="f">▲</button>
+          <button class="dbtn left"  data-tel="l">◀</button>
+          <button class="dbtn stop"  data-tel="s">■</button>
+          <button class="dbtn right" data-tel="r">▶</button>
+          <button class="dbtn down"  data-tel="b">▼</button>
+        </div>
+        <div class="speed">
+          <label>速度 <b id="spdVal">0.20</b> m/s</label>
+          <input id="spdRange" type="range" min="5" max="50" value="20">
+        </div>
+        <p id="leaseHint" class="hint small">未取得控制权时遥控无效（防多人抢车）</p>
+      </div>
+
+      <!-- 导航：点名点选，不要求打字 -->
+      <div class="card" id="cardNav">
+        <div class="card-h"><span>导航</span></div>
+        <div id="wpList" class="wp-list"><p class="hint small">加载地图后显示点位</p></div>
+        <div class="row">
+          <!-- ★ 重新定位：以前叫「在此重新定位」，且内部直接复用当前位姿，
+               等于什么都没修正（详见 app.js relocalize 的注释）。
+               现在点了会弹框让你指定"车实际在哪、朝哪"，和 RViz 的
+               2D Pose Estimate 一个语义。 -->
+          <button id="btnReloc" class="btn-ghost">重新定位…</button>
+          <button id="btnCancel" class="btn-ghost danger">取消任务</button>
+        </div>
+        <p class="hint small">提示：长按地图可直接把该点设为导航目标；
+          定位飘了就先点地图上车的真实位置，再点「重新定位…」</p>
+      </div>
+
+      <!-- 点位管理：地图点选 或 直接输坐标，都能带朝向 -->
+      <div class="card" id="cardWp">
+        <div class="card-h">
+          <span>点位管理</span>
+          <span id="pickHint" class="hint small">点地图取位置</span>
+        </div>
+        <div id="pickedPos" class="picked">未选取位置</div>
+        <div class="row">
+          <button id="btnPickCargo" class="btn-ghost">存为搬货点</button>
+          <button id="btnPickNav" class="btn-ghost">存为导航点</button>
+        </div>
+        <div class="row">
+          <!-- ★ 手输入口：现场经常是"纸上记着坐标"或者"地图上那个位置
+               被货架挡住点不准"，光靠点击没法精确到厘米。 -->
+          <button id="btnWpManual" class="btn-ghost">手动输入点位</button>
+        </div>
+        <p class="hint small">点地图选位置 → 在弹出的框里拖方向盘定朝向 → 保存。
+          也可以直接手输坐标。</p>
+      </div>
+
+      <!-- 路线管理 -->
+      <div class="card" id="cardRoute">
+        <div class="card-h"><span>路线</span>
+          <button id="btnRouteNew" class="btn-mini">新建</button></div>
+        <div id="routeList" class="wp-list"><p class="hint small">暂无路线</p></div>
+      </div>
+
+      <!-- 任务系统（等价终端 [9]） -->
+      <div class="card" id="cardTask">
+        <div class="card-h"><span>任务系统</span>
+          <button id="btnTaskRun" class="btn-mini btn-run">开始执行</button></div>
+        <div id="taskList" class="wp-list"><p class="hint small">任务缓冲为空</p></div>
+        <div class="row">
+          <button id="btnTaskAdd" class="btn-ghost">新增搬运任务</button>
+          <button id="btnTaskClear" class="btn-ghost danger">清空</button>
+        </div>
+      </div>
+
+      <!-- 地图库 -->
+      <div class="card">
+        <div class="card-h"><span>地图库</span>
+          <button id="btnMaps" class="btn-mini">刷新</button></div>
+        <div id="mapList" class="wp-list"><p class="hint small">点刷新读取</p></div>
+      </div>
+
+      <!-- 建图（只在建图模式下显示） -->
+      <div class="card" id="cardMapping" style="display:none">
+        <div class="card-h"><span>建图</span>
+          <span id="mapGrow" class="hint small">—</span></div>
+        <p class="hint small">用十字键遥控走一圈覆盖场地，地图会实时长出来；走完点保存。</p>
+        <div class="row">
+          <button id="btnMapSave" class="btn-primary">保存地图</button>
+        </div>
+        <p class="hint small">先走完再保存。保存后可切到导航模式使用这张图。</p>
+      </div>
+
+      <!-- 系统：自检 / 恢复 / 地图 -->
+      <div class="card">
+        <div class="card-h"><span>系统</span></div>
+        <div class="row">
+          <button id="btnCheck" class="btn-ghost">一键自检</button>
+          <button id="btnResume" class="btn-ghost">恢复</button>
+        </div>
+        <div id="checkOut" class="taskinfo"></div>
+      </div>
+
+      <!-- 搬运（建图模式下隐藏） -->
+      <div class="card" id="cardCargo">
+        <div class="card-h"><span>搬运</span></div>
+        <div class="row">
+          <button id="btnLift"  class="btn-primary">顶升</button>
+          <button id="btnLower" class="btn-ghost">下降</button>
+        </div>
+        <div id="taskInfo" class="taskinfo">无进行中任务</div>
+      </div>
+
+      <!-- 日志：实时状态 + 任务 + 系统日志 -->
+      <div class="card grow">
+        <div class="card-h">
+          <span>运行日志</span>
+          <button id="btnClearLog" class="btn-mini">清屏</button>
+        </div>
+        <div id="log" class="log"></div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- 底部页签：手机上切换 地图/操作/日志，电脑上始终全显示 -->
+  <nav class="tabs">
+    <button data-tab="map"  class="on">地图</button>
+    <button data-tab="ops">操作</button>
+    <button data-tab="log">日志</button>
+  </nav>
+</div>
+
+<!-- ══════════ 通用模态框（替代 prompt/confirm，触屏友好） ══════════
+     ★ 为什么要它：原版有 8 处 prompt()，手机上会弹出系统输入框，
+       输中文点位名、逗号分隔的途经点序列都很痛苦 —— 而这台车的
+       使用场景就是"手上拿着手机在车间里"，必须能用拇指点完。
+     这里统一成一个模态：标题 + 说明 + 内容区 + 确定/取消。 -->
+<div id="modal" class="modal-mask hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <h2 id="modalTitle" class="modal-title">—</h2>
+    <p id="modalDesc" class="modal-desc"></p>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-actions">
+      <button id="modalCancel" class="btn-ghost">取消</button>
+      <button id="modalOk" class="btn-primary">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

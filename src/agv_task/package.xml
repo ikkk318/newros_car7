@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息：名称、版本、描述、维护者与许可证 -->
+  <name>agv_task</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 任务层（唯一执行者）。
+    纯逻辑模块：CommandRouter（指令门卫）、GotoController（单点导航状态机）、
+    SafetyMonitor（安全层）、TaskManager（完整搬运状态机）。
+    节点：task_manager_node 收 /agv/command，发 /agv/task_state，
+    提供 /agv/query，调点位/路线/搬货服务，导航走 nav2_simple_commander。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>nav2_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf_transformations</exec_depend>
+  <exec_depend>agv_interfaces</exec_depend>
+  <exec_depend>agv_common</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <!-- 导出信息：声明构建类型为 ament_python（纯 Python 包） -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

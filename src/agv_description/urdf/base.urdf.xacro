@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!--
+  车体模块：base_footprint（地面投影点）+ base_link（车体包络盒）
+  ==================================================================
+  尺寸、质量、惯性公式均来自顶层 agv_500.urdf.xacro 的「可调参数」区，
+  宏在展开时读取全局 property，改尺寸只改顶层参数区即可。
+  对应 chapt8 fishbot_description 的 urdf/fishbot/base.urdf.xacro。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入惯性宏库（重复 include 无副作用） -->
+  <xacro:include filename="common_inertia.xacro"/>
+
+  <!-- 实例化：生成 base_footprint 与 base_link（两驱动轮轴中点在地面的投影为原点） -->
+  <xacro:macro name="base_xacro" params="">
+
+    <!-- base_footprint：机器人在地面的投影点（空 link），TF 树的根 -->
+    <link name="base_footprint"/>
+
+    <!-- base_footprint -> base_link：固定关节，与投影点重合（z = 0） -->
+    <joint name="base_footprint_joint" type="fixed">
+      <parent link="base_footprint"/>
+      <child  link="base_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- base_link：车体包络盒（500 x 500 x 105 mm），底面离地 clearance -->
+    <link name="base_link">
+      <visual>
+        <origin xyz="0 0 ${clearance + body_H/2}" rpy="0 0 0"/>
+        <geometry><box size="${body_L} ${body_W} ${body_H}"/></geometry>
+        <material name="c_body"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${clearance + body_H/2}" rpy="0 0 0"/>
+        <geometry><box size="${body_L} ${body_W} ${body_H}"/></geometry>
+      </collision>
+      <xacro:inertia_box m="${body_mass}" x="${body_L}" y="${body_W}" z="${body_H}" oz="${clearance + body_H/2}"/>
+    </link>
+
+  </xacro:macro>
+
+</robot>

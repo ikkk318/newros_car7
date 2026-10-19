@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  激光雷达模块：2D 雷达本体（外壳圆柱）
+  ==================================================================
+  安装方式：车体几何中心（x = laser_x = 0.000，y = 0，扫描面 z = 0.170），
+  与 IMU 同轴、落在车体正中，四周无自身结构遮挡，整圈射线都有效。
+
+  关键约定（README §3.4）：
+    laser_joint 的 origin z = laser_z 是「扫描面（光学中心）高度」，不是外壳底面。
+
+  外壳尺寸、位置、质量均在顶层参数区定义。
+  对应 chapt8 fishbot_description 的 urdf/fishbot/sensor/laser.urdf.xacro。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入惯性宏库：提供圆柱/长方体/球体惯性计算 -->
+  <xacro:include filename="../common_inertia.xacro"/>
+
+  <!-- 雷达宏：生成 laser link 与 laser_joint -->
+  <xacro:macro name="laser_xacro" params="">
+
+    <!-- 雷达 link：橙色圆柱外壳（半径 laser_R，高 laser_H） -->
+    <link name="laser">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><cylinder radius="${laser_R}" length="${laser_H}"/></geometry>
+        <material name="c_laser"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><cylinder radius="${laser_R}" length="${laser_H}"/></geometry>
+        <material name="c_laser"/>
+      </collision>
+      <xacro:inertia_cyl_z m="${laser_mass}" r="${laser_R}" l="${laser_H}"/>
+    </link>
+
+    <!-- 雷达关节：fixed 固定到 base_link；位置 (laser_x, 0, laser_z) -->
+    <joint name="laser_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="laser"/>
+      <origin xyz="${laser_x} 0 ${laser_z}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

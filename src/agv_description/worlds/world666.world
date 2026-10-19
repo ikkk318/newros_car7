@@ -1,0 +1,490 @@
+<?xml version='1.0' ?>
+<sdf version='1.7'>
+  <world name='default'>
+    <gravity>0 0 -9.8</gravity>
+    <physics type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <model name='ground_plane'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><ambient>0.75 0.75 0.75 1</ambient><diffuse>0.75 0.75 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== 墙体（外墙 + 内部隔墙，沿用用户世界几何）===== -->
+    <model name='wall_0'>
+      <static>true</static>
+      <pose>-0.424800 9.256000 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>20.750000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>20.750000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_1'>
+      <static>true</static>
+      <pose>9.875200 -0.294000 1.250000 0 0 -1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>19.250000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>19.250000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_2'>
+      <static>true</static>
+      <pose>0.075200 -9.844000 1.250000 0 0 3.141600</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>19.750000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>19.750000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_3'>
+      <static>true</static>
+      <pose>-10.224800 -0.294000 1.250000 0 0 1.623100</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>19.276200 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>19.276200 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_4'>
+      <static>true</static>
+      <pose>-7.898800 -5.390700 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>4.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>4.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_5'>
+      <static>true</static>
+      <pose>-5.679800 -8.361800 1.250000 0 0 -1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>3.000000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>3.000000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_6'>
+      <static>true</static>
+      <pose>3.840600 -7.879400 1.250000 0 0 -1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>3.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>3.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_7'>
+      <static>true</static>
+      <pose>5.390600 -6.204400 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>3.250000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>3.250000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_8'>
+      <static>true</static>
+      <pose>-8.105200 -0.834000 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>4.250000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>4.250000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_9'>
+      <static>true</static>
+      <pose>-5.945900 -4.129500 1.250000 0 0 -1.396500</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>2.711300 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>2.711300 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_10'>
+      <static>true</static>
+      <pose>-5.435700 7.331000 1.250000 0 0 -1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>4.000000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>4.000000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_11'>
+      <static>true</static>
+      <pose>3.596500 7.162400 1.250000 0 0 -1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>4.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>4.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_12'>
+      <static>true</static>
+      <pose>-9.387000 5.675700 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>2.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>2.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_13'>
+      <static>true</static>
+      <pose>5.727800 5.350200 1.250000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>4.250000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>4.250000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_14'>
+      <static>true</static>
+      <pose>3.848900 -6.101700 1.250000 0 0 1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>2.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>2.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='wall_15'>
+      <static>true</static>
+      <pose>3.848900 0.248300 1.250000 0 0 1.570800</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>10.500000 0.150000 2.500000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>10.500000 0.150000 2.500000</size></box></geometry>
+          <material><ambient>0.55 0.55 0.60 1</ambient><diffuse>0.55 0.55 0.60 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== 凵型槽位（水平放置，开口朝通道，供 AGV 停到槽口前）===== -->
+    <model name='slot_1_part0'>
+      <static>true</static>
+      <pose>3.081980 3.131590 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_1_part1'>
+      <static>true</static>
+      <pose>3.081980 2.251590 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_1_part2'>
+      <static>true</static>
+      <pose>3.671980 2.691590 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_2_part0'>
+      <static>true</static>
+      <pose>-8.994323 -7.962225 0.200000 0 0 -3.084810</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_2_part1'>
+      <static>true</static>
+      <pose>-9.044265 -7.083643 0.200000 0 0 -3.084810</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_2_part2'>
+      <static>true</static>
+      <pose>-9.608343 -7.556417 0.200000 0 0 -3.084810</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_3_part0'>
+      <static>true</static>
+      <pose>3.007990 -5.699870 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_3_part1'>
+      <static>true</static>
+      <pose>3.007990 -6.579870 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_3_part2'>
+      <static>true</static>
+      <pose>3.597990 -6.139870 0.200000 0 0 0.000000</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_4_part0'>
+      <static>true</static>
+      <pose>-9.064790 8.474690 0.200000 0 0 1.552170</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_4_part1'>
+      <static>true</static>
+      <pose>-8.184942 8.458299 0.200000 0 0 1.552170</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_4_part2'>
+      <static>true</static>
+      <pose>-8.613877 9.056392 0.200000 0 0 1.552170</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_5_part0'>
+      <static>true</static>
+      <pose>-9.243453 -3.039400 0.200000 0 0 -3.099490</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_5_part1'>
+      <static>true</static>
+      <pose>-9.280492 -2.160180 0.200000 0 0 -3.099490</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.100000 0.080000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='slot_5_part2'>
+      <static>true</static>
+      <pose>-9.851450 -2.624623 0.200000 0 0 -3.099490</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.080000 0.960000 0.400000</size></box></geometry>
+          <material><ambient>0.45 0.55 0.75 1</ambient><diffuse>0.45 0.55 0.75 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== 货物方块（坐在槽顶上；kinematic 体，位姿可由脚本摆放）=====
+         （当前阶段它只是场景道具，搬货动作留给 /agv/cargo 服务）===== -->
+    <model name='cargo_box_0'>
+      <static>false</static>
+      <kinematic>true</kinematic>
+      <pose>3.028740 2.699860 0.637591 0 0 0.037261</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia><ixx>0.168539</ixx><ixy>0</ixy><ixz>0</ixz>
+                   <iyy>0.141055</iyy><iyz>0</iyz><izz>0.271961</izz></inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry><box><size>1.211140 1.340400 0.475182</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.211140 1.340400 0.475182</size></box></geometry>
+          <material><ambient>0.85 0.65 0.15 1</ambient><diffuse>0.85 0.65 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name='cargo_box_1'>
+      <static>false</static>
+      <kinematic>true</kinematic>
+      <pose>-9.340370 -2.523900 0.637591 0 0 0.037261</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia><ixx>0.168539</ixx><ixy>0</ixy><ixz>0</ixz>
+                   <iyy>0.141055</iyy><iyz>0</iyz><izz>0.271961</izz></inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry><box><size>1.211140 1.340400 0.475182</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>1.211140 1.340400 0.475182</size></box></geometry>
+          <material><ambient>0.85 0.65 0.15 1</ambient><diffuse>0.85 0.65 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== 让 /gazebo/set_entity_state 与 get_entity_state 可用 =====
+         （需要脚本摆放实体位姿时用它，例如以后接仿真搬货插件）===== -->
+    <plugin name='gazebo_ros_state' filename='libgazebo_ros_state.so'>
+      <ros><namespace>/gazebo</namespace></ros>
+      <update_rate>50.0</update_rate>
+    </plugin>
+  </world>
+</sdf>

@@ -1,0 +1,46 @@
+# collision_monitor.yaml —— 防撞兜底（opt-in，默认不启用）
+# ------------------------------------------------------------------
+# 这是 D2「防撞（雷达近距停车）」的最后一道硬件级保险：无论规划器/仲裁算得多烂，
+# 物理上不让车撞。对应 Nav2 官方 nav2_collision_monitor。
+#
+# ⚠ 默认**不接进链路**——因为它会再插一层速度转发，改动速度链。要用时：
+#   1) 按需启一个 collision_monitor 节点（见下方"接法"）；
+#   2) 把它的 cmd_vel_out_topic 指向底盘听的话题。
+#
+# 接法（二选一）：
+#   A. 与现有仲裁串联：/cmd_vel →(velocity_arbiter)→ /cmd_vel_arb
+#        →(collision_monitor)→ /cmd_vel_raw →(底盘)
+#      此时 velocity_arbiter 的 cmd_out 改成 /cmd_vel_arb，
+#      collision_monitor 的 cmd_vel_in 用 /cmd_vel_arb、cmd_vel_out 用 /cmd_vel_raw。
+#   B. 只想要"急停保险"：collision_monitor 直接接 /cmd_vel → /cmd_vel_raw，
+#      把 velocity_arbiter 关掉（enabled:=false）。
+#
+# 启动示例（Humble 已装 nav2_collision_monitor）：
+#   ros2 run nav2_collision_monitor collision_monitor --ros-args \
+#       --params-file <此文件>
+collision_monitor:
+  ros__parameters:
+    use_sim_time: True
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    cmd_vel_in_topic: "cmd_vel"          # 上游速度入
+    cmd_vel_out_topic: "cmd_vel_raw"     # 下游（底盘）速度出
+    transform_tolerance: 0.5
+    source_timeout: 5.0
+    base_shift_correction: True
+    stop_pub_timeout: 2.0
+    # 停止区：进入该多边形区域立即发零速（比车身略大一圈，留反应余量）
+    polygons: ["PolygonStop"]
+    PolygonStop:
+      type: "polygon"
+      points: [0.40, 0.30, 0.40, -0.30, -0.35, -0.30, -0.35, 0.30]   # 车体 0.5×0.5 外扩
+      action_type: "stop"
+      max_points: 3
+      visualize: True
+      polygon_pub_topic: "polygon_stop"
+      enabled: True
+    observation_sources: ["scan"]
+    scan:
+      type: "scan"
+      topic: "/scan"
+      enabled: True

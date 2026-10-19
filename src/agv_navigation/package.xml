@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>agv_navigation</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 500x500 顶升搬运车 —— 建图与导航参数/启动配置（ROS 2 Humble + Nav2）。
+    含 slam_toolbox 在线建图参数、Nav2 导航参数、建图/导航两个总 launch、
+    已建仓库栅格地图（src/agv_navigation/maps/world666map/）与 RViz 可视化配置。
+    纯配置包（无编译源码），依赖 agv_description 提供的仿真与机器人模型。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- 建图：slam_toolbox 在线异步建图 + 地图保存 -->
+  <exec_depend>slam_toolbox</exec_depend>
+
+  <!-- 导航：Nav2 全套（bringup 会拉起下列子包） -->
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_amcl</exec_depend>
+  <exec_depend>nav2_planner</exec_depend>
+  <exec_depend>nav2_controller</exec_depend>
+  <exec_depend>nav2_costmap_2d</exec_depend>
+  <exec_depend>nav2_bt_navigator</exec_depend>
+  <exec_depend>nav2_behaviors</exec_depend>
+  <exec_depend>nav2_waypoint_follower</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>nav2_rviz_plugins</exec_depend>
+  <exec_depend>nav2_msgs</exec_depend>
+
+  <!-- 仿真与机器人模型由 agv_description 提供（sim.launch.py） -->
+  <exec_depend>agv_description</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <!-- 可视化与工具 -->
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

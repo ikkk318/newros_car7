@@ -1,0 +1,30 @@
+frame_id: map
+routes:
+  1号:
+    points:
+    - name: 1点
+      x: 0.0
+      y: 0.0
+      yaw: 0.0
+    - name: 2点
+      x: -7.0
+      y: 2.4
+      yaw: 0.0
+    - name: 3点
+      x: -3.5
+      y: -3.3
+      yaw: 0.0
+    - name: 4点
+      x: -0.1
+      y: 5.0
+      yaw: 0.0
+  路线1:
+    points:
+    - name: 1点
+      x: 0.0
+      y: 0.0
+      yaw: 0.0
+    - name: 3点
+      x: -3.5
+      y: -3.3
+      yaw: 0.0

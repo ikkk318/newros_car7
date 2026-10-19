@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息 -->
+  <name>agv_lift</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 搬货服务（顶升 / 下降二合一）。
+    cargo_node 提供 /agv/cargo 服务（命令 lift=顶升 / lower=下降），
+    维护 /agv/cargo/busy 标志（true=正在搬货），现阶段服务内不做动作、立即返回成功。
+    它是全项目唯一与搬货机器打交道的地方：接真实硬件只改这一个节点。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>agv_interfaces</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

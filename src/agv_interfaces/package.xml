@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息：名称、版本、描述、维护者、许可证 -->
+  <name>agv_interfaces</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 接口契约包（自定义 msg/srv）。
+    三条消息：统一指令总线 AgvCommand、任务状态 TaskState、带名字的位姿 NamedPose；
+    三个服务：点位/路线统一存储 AgvStore、搬货 CargoCmd、运行时查询 AgvQuery。
+    全项目共用，字段不得擅改。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 构建工具依赖：ament_cmake + rosidl 接口生成器 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <!-- 运行依赖：接口包运行期必需的 rosidl 运行时 -->
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <!-- 声明本包属于 rosidl 接口包组（接口定义包的固定写法） -->
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

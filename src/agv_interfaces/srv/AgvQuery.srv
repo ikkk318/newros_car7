@@ -1,0 +1,20 @@
+# AgvQuery.srv —— 查询 AGV 当前状态 / 当前位置
+# ------------------------------------------------------------------
+# /agv/command 是话题，广播发出去收不到回答；想知道"现在什么状态、车在哪"
+# 必须用服务。
+#
+# ★ 点位表 / 路线表**不在这里查**：它们属于"存储内容"，统一走 AgvStore 服务
+#   （resource=waypoint|route, action=list）。本服务只回答"运行时状态"，
+#   职责单一，避免同一个东西两个服务都能查。
+#
+# 取值：
+#   what = "state"  任务状态（看 state 字段）
+#   what = "pose"   当前位置（看 x/y/yaw 字段）
+string what      # "state" 任务状态 / "pose" 当前位置
+---
+bool   ok        # 是否查询成功
+string state     # 任务状态串（what=state 时）
+float64 x        # 当前位置 x（map 坐标系，m；what=pose 时）
+float64 y        # 当前位置 y
+float64 yaw      # 当前朝向（rad）
+string message   # 中文回执

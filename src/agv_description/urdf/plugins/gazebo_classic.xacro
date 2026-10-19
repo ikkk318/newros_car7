@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<!--
+  Gazebo Classic 11 插件模块（适配 ROS 2 Humble）
+  ==================================================================
+  内容与原 agv_500.gazebo_classic.xacro 完全一致，只是改为宏封装，
+  由主文件 agv_500.urdf.xacro 通过 <xacro:gazebo_classic_plugins/> 实例化：
+    · 差速驱动   libgazebo_ros_diff_drive.so
+    · 激光雷达   libgazebo_ros_ray_sensor.so（type="ray"，CPU 射线）
+    · IMU        libgazebo_ros_imu_sensor.so
+    · 各连杆摩擦 mu1/mu2（Classic 写法：<gazebo reference> 直接挂标签）
+  所有数值必须与主文件「可调参数」保持一致（xacro include 不跨文件传 property，
+  这里写实值；激光采样数 laser_samples 由主文件传入）。2026-10 建图稳定性改动：
+  发布里程计协方差（供 robot_localization 定权）、publish_odom_tf 改为可传入
+  （EKF 接管 odom TF）、雷达改为车体中心的 360° 全向扫描。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 实例化宏：一次性生成差速插件 + 三个传感器 + 全部摩擦配置
+       publish_odom_tf：是否由差速插件发布 odom→base_footprint（默认 true）。
+       由 agv_500.urdf.xacro 以 xacro arg 透传；sim.launch.py 起 EKF 时置 false。
+       laser_samples  ：激光采样点数，由主文件按 360° 全向算好传入（1°/点）。 -->
+  <xacro:macro name="gazebo_classic_plugins" params="publish_odom_tf:=true laser_samples:=361">
+
+    <!-- ==================== 差速驱动 ==================== -->
+    <gazebo>
+      <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+        <!-- 话题重映射必须写在 <ros> 里（Humble 的 gazebo_ros_diff_drive 已不认
+             顶层 <command_topic>/<odometry_topic>，写了也会被忽略、退回默认
+             cmd_vel / odom）。这里把命令话题重映射到 cmd_vel_raw：底盘只听
+             cmd_vel_raw，Nav2 的 /cmd_vel 必须先经 velocity_arbiter 加工再进来。
+             另：/tf 话题在本插件里是 "tf" 相对名，重映射到自己即可（消掉
+             "publishing to /tf but not remapped" 的告警）。 -->
+        <ros>
+          <namespace>/</namespace>
+          <remapping>cmd_vel:=cmd_vel_raw</remapping>
+          <remapping>odom:=odom</remapping>
+          <remapping>tf:=tf</remapping>
+        </ros>
+        <update_rate>50</update_rate>
+
+        <left_joint>left_wheel_joint</left_joint>
+        <right_joint>right_wheel_joint</right_joint>
+
+        <!-- 单位：米 -->
+        <wheel_separation>0.440</wheel_separation>
+        <wheel_diameter>0.100</wheel_diameter>
+
+        <max_wheel_torque>20.0</max_wheel_torque>
+        <!-- 轮加速度上限（rad/s² 级）——底盘真正的物理限幅。
+             按要求「移除转向惯性」：给 100 相当于不设限，轮速指令即起即停，
+             遥控手感干脆、无拖尾。（曾试过收到 5.0，遥控明显发黏、刹不住，
+             已回退。） -->
+        <max_wheel_acceleration>100.0</max_wheel_acceleration>
+
+        <!-- 底盘听 cmd_vel_raw：这是"硬件边界"的话题。
+             Nav2 的最终速度 /cmd_vel 先经 agv_hardware/velocity_arbiter
+             （近障减速/择空/限幅）再发到 cmd_vel_raw，本插件直接听后者。
+             阶段三换实车时下位机同样订阅 cmd_vel_raw，软件栈不变。 -->
+        <odometry_frame>odom</odometry_frame>
+        <robot_base_frame>base_footprint</robot_base_frame>
+
+        <publish_odom>true</publish_odom>
+        <!-- odom→base_footprint 的 TF 归属：默认由本插件发布；sim.launch.py 以
+             use_ekf:=true 起 robot_localization EKF 时会把 publish_odom_tf 置
+             false，改由 EKF 发布，避免两个节点抢发同一段 TF。 -->
+        <!-- 注意这里用 str().lower()：xacro 会把宏参数求值成 Python 布尔，
+             直接 ${publish_odom_tf} 会输出首字母大写的 False/True，
+             Gazebo 的 bool 解析只认全小写的 true/false。 -->
+        <publish_odom_tf>${str(publish_odom_tf).lower()}</publish_odom_tf>
+        <publish_wheel_tf>false</publish_wheel_tf>
+
+        <!-- 里程计协方差（方差，m² / rad²）——robot_localization 融合时按此定权。
+             插件默认 1e-5 / 1e-5 / 1e-3 近乎为零，会让 EKF 过度信任轮式里程计、
+             IMU 角速率起不到纠偏作用；这里给到 0.01 量级（std ≈ 10 cm / 5.7°），
+             使「轮式里程计 + IMU 角速率」能真正互补。 -->
+        <covariance_x>0.01</covariance_x>
+        <covariance_y>0.01</covariance_y>
+        <covariance_yaw>0.01</covariance_yaw>
+      </plugin>
+    </gazebo>
+
+    <!-- ==================== 关节状态发布 ====================
+         发布 /joint_states（左右轮角度/角速度），供 robot_state_publisher
+         补全 TF 树里的 base_link -> left/right_wheel 两段变换。
+         没有它，continuous 关节的轮子不会出现在 TF 里。 -->
+    <gazebo>
+      <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+        <ros>
+          <namespace>/</namespace>
+        </ros>
+        <update_rate>50</update_rate>
+        <joint_name>left_wheel_joint</joint_name>
+        <joint_name>right_wheel_joint</joint_name>
+      </plugin>
+    </gazebo>
+
+    <!-- ==================== 激光雷达 ==================== -->
+    <gazebo reference="laser">
+      <sensor type="ray" name="lidar">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>true</visualize>       <!-- 打开：可直接看到射线覆盖 -->
+        <update_rate>15</update_rate>     <!-- 扫描频率(Hz)：10→15，点更密、slam 更快收敛（361 点/帧，CPU 负担可控） -->
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>${laser_samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>${laser_scan_min}</min_angle>
+              <max_angle>${laser_scan_max}</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.05</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.005</stddev>       <!-- 激光高斯噪声标准差(m)：0.01→0.005，减小"同一点反复跳"的噪点，建图更干净 -->
+          </noise>
+        </ray>
+        <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>laser</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <!-- ==================== IMU ==================== -->
+    <gazebo reference="imu_link">
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <!-- ==================== 摩擦 ==================== -->
+    <!-- 驱动轮：正常摩擦，提供牵引力 -->
+    <gazebo reference="left_wheel"> <mu1>0.6</mu1>   <mu2>0.6</mu2>   </gazebo>
+    <gazebo reference="right_wheel"><mu1>0.6</mu1>   <mu2>0.6</mu2>   </gazebo>
+    <!-- 万向轮：极低摩擦，等效「自由滑动」——这是模拟万向轮的标准做法 -->
+    <gazebo reference="caster_front"><mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+    <gazebo reference="caster_rear"> <mu1>0.001</mu1><mu2>0.001</mu2></gazebo>
+    <!-- 车体：不需要与地面摩擦（离地 25mm，正常不会接触） -->
+    <gazebo reference="base_link">   <mu1>0.6</mu1>   <mu2>0.6</mu2>   </gazebo>
+
+  </xacro:macro>
+
+</robot>

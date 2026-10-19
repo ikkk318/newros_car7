@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  驱动轮模块：左右两个连续旋转关节的驱动轮
+  ==================================================================
+  圆柱轮子沿 Y 轴布置（rpy = PI/2 0 0 把默认轴向 Z 转到 Y）。
+  半径、轮宽、质量、轮距、驱动轴位置均在顶层参数区定义，
+  宏内直接读取全局 property，改数值只改顶层。
+  对应 chapt8 fishbot_description 的 urdf/fishbot/actuator/wheel.urdf.xacro。
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入惯性宏库：提供圆柱/长方体/球体惯性计算 -->
+  <xacro:include filename="../common_inertia.xacro"/>
+
+  <!-- 驱动轮宏：wheel_name = left/right（决定连杆与关节名）；y_pos = 轮心横向位置（±track/2） -->
+  <xacro:macro name="wheel_xacro" params="wheel_name y_pos">
+
+    <!-- 车轮 link：黑色扁圆柱 -->
+    <link name="${wheel_name}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_R}" length="${wheel_W}"/></geometry>
+        <material name="c_wheel"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_R}" length="${wheel_W}"/></geometry>
+      </collision>
+      <xacro:inertia_cyl_y m="${wheel_mass}" r="${wheel_R}" l="${wheel_W}"/>
+    </link>
+
+    <!-- 驱动轮关节：continuous = 可无限旋转（没有角度上下限） -->
+    <joint name="${wheel_name}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${wheel_name}_wheel"/>
+
+      <!-- 轮心装在哪：以【父连杆 base_link 的坐标系】为起点量的位移 + 转角
+           xyz = x 前后 drive_x ／ y 左右 ±track/2 ／ z 抬高一个轮半径
+                 z 抬高 wheel_R，轮底才刚好落在地面 z=0：填 0 轮子陷进地里，填大轮子悬空转
+           rpy = 0 0 0，关节坐标系不额外倾斜，与车体同朝向（轮圆柱已经<link>里用 rpy 摆好了） -->
+      <origin xyz="${drive_x} ${y_pos} ${wheel_R}" rpy="0 0 0"/>
+
+      <!-- 绕哪根轴转：必须写成 Y 轴(0 1 0)，两轮一致才能走直线/原地转 -->
+      <axis xyz="0 1 0"/>
+
+      <!-- continuous 关节只认这两项：effort=最大力矩(N·m)，velocity=最大角速度(rad/s)
+           20 rad/s × wheel_R 0.05 = 1.0 m/s，就是最高车速；velocity 设小车会跑不动 -->
+      <limit effort="20.0" velocity="20.0"/>
+
+      <!-- 关节自身转动的阻力：damping=黏性阻尼 ∝ 转速，friction=恒定摩擦扭矩
+           取小值近似"轴承顺滑"；抓地力靠 plugins 里的 mu1/mu2（Classic 常忽略本行 friction） -->
+      <dynamics damping="0.05" friction="0.02"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

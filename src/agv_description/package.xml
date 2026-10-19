@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>agv_description</name>
+  <version>3.0.0</version>
+  <description>
+    AGV 500x500 差速底盘 —— 仿真模型（模块化重构版）
+    (URDF/xacro 机器人本体【base / actuator / sensor / plugins 模块】 +
+     Gazebo Classic 11 插件【适配 ROS 2 Humble】 + launch + 测试世界 + RViz 配置)
+  </description>
+  <maintainer email="todo@example.com">AGV Sim Model</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- ========== 只看模型（display.launch.py） ========== -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <!-- ========== 起仿真：Gazebo Classic 11（本机 Humble 环境） ========== -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros_pkgs</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+
+  <!-- ========== 里程计融合：/odom + /imu → odom→base_footprint ========== -->
+  <exec_depend>robot_localization</exec_depend>
+
+  <!-- ========== 话题消息类型（由上面的仿真插件发布/订阅） ========== -->
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>rosgraph_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

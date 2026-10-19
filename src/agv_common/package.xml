@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息 -->
+  <name>agv_common</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 跨模块公共工具库（纯 Python，无 ROS 节点）。
+    提供几何/角度换算、速度限幅、反应式避障策略、点位预检、地图库管理，
+    以及 YAML 参数加载与 default→覆盖层 合并。各功能包通过 import 复用。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖：本包为纯 Python，仅需 PyYAML -->
+  <exec_depend>python3-yaml</exec_depend>
+
+  <!-- 测试依赖：pytest -->
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

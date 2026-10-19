@@ -1,0 +1,8 @@
+# cargo.yaml —— 搬货服务参数（顶升 / 下降）
+# ------------------------------------------------------------------
+# 对应 agv_lift 包的 cargo_node：本项目唯一与"搬货机器"打交道的节点。
+# 现阶段它只维护"正在搬货"标志并立即返回成功；接真实硬件时改
+# agv_lift/agv_lift/cargo_node.py 的服务实现即可，这里不用动。
+service_name: /agv/cargo        # 搬货服务名（command: lift=顶升 / lower=下降）
+busy_topic: /agv/cargo/busy     # "正在搬货"标志（std_msgs/Bool，true=搬货中）
+publish_period: 1.0             # 标志补发周期（s）：晚加入的订阅者也能看到当前状态

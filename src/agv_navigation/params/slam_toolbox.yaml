@@ -1,0 +1,87 @@
+# ============================================================
+# slam_toolbox 参数（AGV 500×500 顶升搬运车 · 在线异步建图）
+# ------------------------------------------------------------
+# 用途：mapping.launch.py 拉起 async_slam_toolbox_node 时加载。
+# 数据流：/scan + TF(odom→base_footprint) → slam_toolbox → /map + map→odom
+# 建图完成后保存：
+#   ros2 run nav2_map_server map_saver_cli -f src/agv_navigation/maps/world666map/world666map
+#
+# 雷达：车体几何中心、全向 360°、扫描面 z=0.170（高于底盘顶面 0.130），无盲区。
+# 2026-10 修复「建图后期地图整体错位/变形」的根因就是这里曾被限制成前向 ±90°：
+# 开阔处前向可见点退化 → 扫描匹配响应面抹平 → 航向被顶到角度搜索窗边缘。
+# 雷达量程 8 m，故 max_laser_range 取 8.0。
+# ============================================================
+slam_toolbox:                                                 # ---- slam_toolbox：在线建图（构建栅格地图）----
+  ros__parameters:
+
+    # 求解器与插件参数
+    solver_plugin: solver_plugins::CeresSolver                # 位姿图优化求解器（Ceres）
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY               # 稀疏线性求解方式
+    ceres_preconditioner: SCHUR_JACOBI                        # 预条件子，加速迭代收敛
+    ceres_trust_strategy: LEVENBERG_MARQUARDT                 # 信任域策略
+    ceres_dogleg_type: TRADITIONAL_DOGLEG                     # Dogleg 步长类型
+    ceres_loss_function: None                                 # 不使用鲁棒核函数
+
+    # ROS 坐标系与话题参数
+    odom_frame: odom                                          # 里程计坐标系
+    map_frame: map                                            # 地图坐标系
+    base_frame: base_footprint                                # 机器人本体坐标系（与 AMCL 一致）
+    scan_topic: /scan                                         # 激光话题
+    use_map_saver: true                                       # 允许用 map_saver 保存
+    mode: mapping                                             # mapping=建图；改 localization 则纯定位
+
+    # 若想在指定位姿续建已有地图，三者互斥（给了位姿优先用位姿）：
+    # map_file_name: /path/to/serialized_map
+    # map_start_pose: [0.0, 0.0, 0.0]
+    # map_start_at_dock: true
+
+    debug_logging: false                                      # 调试日志开关
+    throttle_scans: 1                                         # 每 N 帧处理 1 帧，1=不抽帧
+    transform_publish_period: 0.02                            # 发布 odom→map 的周期（s）
+    map_update_interval: 0.5                                  # 地图发布间隔（s）：2.0→0.5，图刷新更快，散点几帧内就收敛
+    resolution: 0.025                                         # 栅格分辨率（m/格），与 nav2_params 一致
+    min_laser_range: 0.0                                      # 栅格化使用的最小量程（m）
+    max_laser_range: 8.0                                      # 栅格化使用的最大量程（m），与雷达量程一致
+    minimum_time_interval: 0.2                                # 两帧处理的最小间隔（s）：0.5→0.2，建图更跟手
+    transform_timeout: 0.2                                    # TF 查询超时（s）
+    tf_buffer_duration: 30.                                   # TF 缓存时长（s）
+    stack_size_to_use: 40000000                               # 线程栈大小（字节）：大地图序列化需要
+    enable_interactive_mode: true                             # 允许交互式修正地图
+
+    # 扫描匹配与建图节拍
+    use_scan_matching: true                                   # 启用扫描匹配修正里程计漂移
+    use_scan_barycenter: true                                 # 用点云重心做初值估计
+    minimum_travel_distance: 0.15                             # 每平移 0.15 m 处理一帧：0.3→0.15，走一点就记一次，建图更快
+    minimum_travel_heading: 0.15                              # 每转 0.15 rad 处理一帧：0.3→0.15，转向时也及时记录
+    scan_buffer_size: 10                                      # 缓存的扫描链长度
+    scan_buffer_maximum_scan_distance: 10.0                   # 缓存链最大覆盖距离（m）
+    link_match_minimum_response_fine: 0.1                     # 相邻帧匹配的最低响应分
+    link_scan_maximum_distance: 1.5                           # 相邻帧建立链接的最大距离（m）
+    loop_search_maximum_distance: 1.5                         # 回环搜索最大距离（m）：3.0→1.5，只在近邻找、抑制误回环
+    do_loop_closing: true                                     # 启用回环检测，消除累计漂移
+    loop_match_minimum_chain_size: 20                         # 构成回环链的最少帧数：10→20，要求更长链才认回环
+    loop_match_maximum_variance_coarse: 1.0                   # 粗匹配允许最大方差：3.0→1.0，收紧
+    loop_match_minimum_response_coarse: 0.50                  # 粗匹配最低响应分：0.35→0.50，门槛抬高
+    loop_match_minimum_response_fine: 0.60                    # 细匹配最低响应分：0.45→0.60，门槛抬高
+
+    # 相关性搜索参数（扫描匹配的搜索空间）
+    correlation_search_space_dimension: 0.5                   # 搜索窗口尺寸（m）
+    correlation_search_space_resolution: 0.01                 # 搜索窗口分辨率（m）
+    correlation_search_space_smear_deviation: 0.1             # 响应图平滑标准差
+
+    # 回环检测搜索参数
+    loop_search_space_dimension: 4.0                          # 回环搜索窗口尺寸（m）：8.0→4.0，缩小搜索域
+    loop_search_space_resolution: 0.05                        # 回环搜索分辨率（m）
+    loop_search_space_smear_deviation: 0.03                   # 响应图平滑标准差
+
+    # 扫描匹配器参数
+    distance_variance_penalty: 0.5                            # 距离方差惩罚权重
+    angle_variance_penalty: 1.0                               # 角度方差惩罚权重
+
+    fine_search_angle_offset: 0.00349                         # 细搜索角度步长（rad，约 0.2°）
+    coarse_search_angle_offset: 0.349                         # 粗搜索角度范围（rad，约 20°）
+    coarse_angle_resolution: 0.0349                           # 粗搜索角度分辨率（rad，约 2°）
+    minimum_angle_penalty: 0.9                                # 最小角度惩罚系数
+    minimum_distance_penalty: 0.5                             # 最小距离惩罚系数
+    use_response_expansion: true                              # 响应图扩展，提高匹配鲁棒性
+    occupancy_threshold: 0.1                                  # 占据概率阈值

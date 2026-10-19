@@ -1,0 +1,53 @@
+# ============================================================
+# EKF 里程计融合参数（robot_localization · ekf_node）—— 仿真
+# ------------------------------------------------------------
+# 目的：把「轮式里程计 /odom」与「IMU /imu」融合成一条更稳的
+#       odom→base_footprint 变换，抑制急转打滑引起的航向漂移
+#       ——这是「建图后期地图突然偏移/变形」的诱因之一。
+#
+# 由 agv_description/sim.launch.py 拉起（默认 use_ekf:=true）。
+# 该 launch 会同时把差速插件的 publish_odom_tf 置 false，
+# 使 odom→base_footprint 只由本节点发布，避免两节点抢发同一段 TF。
+#
+# 数据流：
+#   /odom (diff_drive) ┐
+#                      ├─► ekf_filter_node ─► TF: odom→base_footprint
+#   /imu  (imu_plugin) ┘                    └► /odometry/filtered
+#
+# 想退回“纯轮式里程计”对照实验：ros2 launch ... use_ekf:=false
+# ============================================================
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true              # Gazebo 仿真必须与 /clock 同步
+
+    frequency: 30.0                 # 滤波输出频率（Hz）
+    sensor_timeout: 0.1             # 某传感器超时多久后不再使用（s）
+    two_d_mode: true                # 平面差速车：锁死 z/roll/pitch 及其速度
+
+    publish_tf: true                # ★ 由本节点发布 odom→base_footprint
+    publish_acceleration: false
+    print_diagnostics: false
+
+    map_frame: map                  # 供扩展；world_frame=odom 时不发布 map→odom
+    odom_frame: odom
+    base_link_frame: base_footprint # 与 URDF / slam_toolbox / AMCL 一致
+    world_frame: odom               # = odom_frame → 纯里程计融合，输出 odom→base
+
+    # ---------- 输入 1：轮式里程计（提供平面位姿 x/y/yaw 与纵向速度 vx） ----------
+    odom0: /odom
+    odom0_queue_size: 10
+    odom0_differential: false
+    odom0_relative: false
+    #        x     y     z     roll  pitch yaw   vx    vy    vz    vroll vpitch vyaw  ax    ay    az
+    odom0_config: [true, true, false, false, false, true, true, false, false, false, false, false, false, false, false]
+
+    # ---------- 输入 2：IMU（只用航向角速率 vyaw，专治转向打滑漂移） ----------
+    #   注意：Gazebo IMU 的 orientation 是相对世界系的绝对姿态，与 odom 的
+    #   相对 yaw 不同源，直接融合会互相打架；故只取角速度 vyaw。
+    imu0: /imu
+    imu0_queue_size: 10
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: true
+    #        x     y     z     roll  pitch yaw   vx    vy    vz    vroll vpitch vyaw  ax    ay    az
+    imu0_config: [false, false, false, false, false, false, false, false, false, false, false, true, false, false, false]

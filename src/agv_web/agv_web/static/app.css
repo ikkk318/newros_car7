@@ -1,0 +1,426 @@
+/* ══════════════════════════════════════════════════════════════
+   AGV 网页控制台样式
+   ★ 设计原则：手机优先。所有可点元素 ≥44px（拇指能稳定点中），
+     不用 hover 表达必要信息（触屏没有 hover），不依赖键盘输入。
+   ══════════════════════════════════════════════════════════════ */
+
+:root{
+  --bg:#12151c;          /* 页面底色 */
+  --panel:#1a1f29;       /* 卡片底 */
+  --panel2:#222836;      /* 次级块 */
+  --line:#2c3444;        /* 分割线 */
+  --txt:#e6eaf2;         /* 主文字 */
+  --dim:#8b95a7;         /* 次要文字 */
+  --ok:#3ecf8e;          /* 正常 */
+  --warn:#f0b429;        /* 警告 */
+  --err:#f2545b;         /* 错误/急停 */
+  --accent:#4c9aff;      /* 强调 */
+  --scan:#ffb454;        /* 激光点 */
+  --plan:#52d1ff;        /* 路径 */
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+html,body{
+  margin:0;padding:0;height:100%;
+  background:var(--bg);color:var(--txt);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",
+       "PingFang SC","Microsoft YaHei",sans-serif;
+  overscroll-behavior:none;      /* 禁止手机下拉刷新把页面拽动 */
+}
+.hidden{display:none!important}
+
+/* ─────────── 登录 ─────────── */
+.login-mask{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 30%,#1d2432,#0c0f14);padding:24px;z-index:50;
+}
+.login-box{
+  width:100%;max-width:340px;background:var(--panel);
+  border:1px solid var(--line);border-radius:18px;padding:26px 22px;text-align:center;
+}
+.login-box h1{margin:0 0 6px;font-size:22px;letter-spacing:.04em}
+.login-box input{
+  width:100%;margin:16px 0;padding:14px 16px;font-size:17px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  color:var(--txt);outline:none;
+}
+.login-box input:focus{border-color:var(--accent)}
+.err{color:var(--err);font-size:14px;min-height:20px;margin:10px 0 0}
+
+/* ─────────── 按钮基类（触屏友好） ─────────── */
+button{
+  font:inherit;color:var(--txt);background:var(--panel2);
+  border:1px solid var(--line);border-radius:12px;
+  min-height:44px;padding:0 16px;cursor:pointer;
+  transition:transform .06s ease,filter .12s ease;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+}
+button:active{transform:scale(.96);filter:brightness(1.25)}
+button:disabled{opacity:.42;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#08101c;font-weight:600}
+.btn-ghost{background:transparent}
+.btn-ghost.danger{color:var(--err);border-color:#4a2a30}
+.btn-primary.big{width:100%;min-height:50px;font-size:17px}
+.btn-mini{min-height:32px;padding:0 10px;font-size:13px;border-radius:8px}
+
+/* ─────────── 顶栏 ─────────── */
+.topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;
+}
+.brand{font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.chips{display:flex;gap:6px;flex:1;overflow:hidden}
+.chip{
+  font-size:12px;padding:5px 10px;border-radius:20px;
+  background:var(--panel2);color:var(--dim);white-space:nowrap;
+  border:1px solid var(--line);max-width:42vw;overflow:hidden;text-overflow:ellipsis;
+}
+.chip.ok{color:var(--ok);border-color:#1e4a36}
+.chip.warn{color:var(--warn);border-color:#4a3d18}
+.chip.err{color:var(--err);border-color:#4a2a30}
+
+/* 工作模式徽标：跟 .chip 同一套配色，但更紧凑（放在卡片标题右侧） */
+.badge{
+  font-size:12px;padding:4px 10px;border-radius:20px;
+  background:var(--panel2);color:var(--dim);white-space:nowrap;
+  border:1px solid var(--line);
+}
+.badge.ok{color:var(--ok);border-color:#1e4a36}
+.badge.warn{color:var(--warn);border-color:#4a3d18}
+.badge.err{color:var(--err);border-color:#4a2a30}
+.badge.unk{color:var(--dim)}
+.btn-panic{
+  background:var(--err);border-color:var(--err);color:#fff;font-weight:700;
+  min-height:44px;padding:0 18px;flex-shrink:0;
+}
+
+/* ─────────── 主体布局 ─────────── */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.main{flex:1;display:flex;min-height:0;overflow:hidden}
+
+.mapwrap{position:relative;flex:1;min-width:0;background:#0a0d12;overflow:hidden}
+#map{display:block;width:100%;height:100%;touch-action:none}
+
+.maptools{
+  position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:8px;
+}
+.maptools button{
+  width:46px;height:46px;min-height:46px;padding:0;border-radius:12px;
+  background:rgba(26,31,41,.92);backdrop-filter:blur(6px);font-size:18px;
+}
+.maptools button.on{border-color:var(--accent);color:var(--accent)}
+
+.legend{
+  position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:10px;
+  font-size:11px;color:var(--dim);background:rgba(10,13,18,.72);
+  padding:7px 10px;border-radius:10px;backdrop-filter:blur(6px);max-width:70%;
+}
+.legend span{display:flex;align-items:center;gap:5px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.sw.free{background:#fefefe} .sw.occ{background:#000}
+.sw.unk{background:#808080} .sw.scan{background:var(--scan);border-radius:50%}
+.sw.plan{background:var(--plan)}
+.coord{
+  position:absolute;right:10px;bottom:10px;font-size:11px;color:var(--dim);
+  background:rgba(10,13,18,.72);padding:5px 9px;border-radius:8px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ─────────── 侧栏 ─────────── */
+.side{
+  width:360px;flex-shrink:0;border-left:1px solid var(--line);
+  background:var(--bg);display:flex;flex-direction:column;
+  gap:10px;padding:10px;overflow-y:auto;
+}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:12px;
+}
+.card.grow{flex:1;display:flex;flex-direction:column;min-height:140px}
+.card-h{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:13px;color:var(--dim);margin-bottom:10px;letter-spacing:.03em;
+}
+.row{display:flex;gap:8px;margin-top:10px}
+.row>button{flex:1}
+
+/* ─────────── 遥控十字键 ─────────── */
+.btn-lease{
+  font-size:12px;min-height:32px;padding:0 12px;border-radius:8px;
+  border-color:var(--accent);color:var(--accent);
+}
+.btn-lease.on{background:var(--ok);border-color:var(--ok);color:#08201a;font-weight:700}
+.dpad{
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  gap:8px;aspect-ratio:1;max-width:280px;margin:0 auto;
+}
+.dbtn{
+  font-size:22px;border-radius:16px;padding:0;min-height:0;
+  background:var(--panel2);display:flex;align-items:center;justify-content:center;
+}
+.dbtn.up{grid-area:1/2} .dbtn.left{grid-area:2/1}
+.dbtn.stop{grid-area:2/2;background:#2b2230;border-color:#4a2a30;color:var(--err)}
+.dbtn.right{grid-area:2/3} .dbtn.down{grid-area:3/2}
+.dbtn.pressed{background:var(--accent);border-color:var(--accent);color:#08101c}
+
+.speed{margin-top:12px;font-size:12px;color:var(--dim)}
+.speed b{color:var(--txt);font-variant-numeric:tabular-nums}
+.speed input{width:100%;margin-top:8px;accent-color:var(--accent);height:28px}
+
+/* ─────────── 点位列表（点击即导航，不用打字） ─────────── */
+.wp-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto}
+.wp{
+  display:flex;align-items:center;gap:10px;padding:11px 12px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+  min-height:48px;cursor:pointer;
+}
+.wp:active{filter:brightness(1.2)}
+.wp .nm{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wp .kd{font-size:11px;color:var(--dim);padding:3px 8px;border-radius:20px;
+        background:#2a3242;flex-shrink:0}
+.wp .kd.cargo{color:#c79bff}
+.wp-del{
+  min-height:36px;width:36px;padding:0;border-radius:9px;
+  color:var(--err);border-color:#4a2a30;background:transparent;flex-shrink:0;
+}
+
+.taskinfo{
+  margin-top:10px;font-size:13px;color:var(--dim);
+  background:var(--panel2);border-radius:10px;padding:10px;
+  min-height:42px;line-height:1.5;
+  white-space:pre-wrap;
+}
+
+/* 地图点选取到的位置显示 */
+.picked{
+  margin-top:8px;font-size:13px;color:var(--txt);
+  background:var(--panel2);border:1px dashed var(--line);border-radius:10px;
+  padding:11px 12px;text-align:center;font-variant-numeric:tabular-nums;
+}
+.picked.set{border-style:solid;border-color:var(--accent);color:var(--accent)}
+
+.btn-run{background:var(--ok);border-color:var(--ok);color:#08201a;font-weight:700}
+.btn-run.running{background:var(--warn);border-color:var(--warn);color:#2a1e00}
+
+/* ─────────── 实时仪表（固定 8 行） ───────────
+   ★ 和"运行日志"的分工：
+     这里是**状态**（任务/动作/速度/避障/定位/地图/模式/连接），
+       固定 8 行、位置不变，值每秒刷新，只显示"现在"；
+     下面是**事件**（顶升、完成、换栈、保存地图），按时间顺序累积。
+
+   ★ 为什么删掉了 overflow-y 和 line-clamp：
+     上一版是"把日志原文塞进格子"，所以必须允许滚动 + 两行截断，
+     结果最关键的数值恰好被切掉（用户："日志长的话看不到后面的信息"）。
+     现在值由后端从状态量生成，实测最长 12 字（"0.30 · -0.28"），
+     一行绰绰有余 —— 不再需要截断，也不需要滚动。
+     真出现超长值就换行，绝不省略：**仪表省掉的字往往正是要看的那个数**。 */
+.board{display:flex;flex-direction:column;gap:4px}
+.board .hint.small{margin:0}
+.brow{
+  display:flex;align-items:baseline;gap:8px;
+  padding:6px 9px;border-radius:8px;background:var(--panel2);
+  border-left:3px solid transparent;font-size:12px;line-height:1.4;
+}
+.brow .bl{color:var(--dim);flex-shrink:0;min-width:44px}
+.brow .bv{
+  flex:1;color:var(--txt);font-variant-numeric:tabular-nums;
+  /* 不截断、不省略：换行也比丢掉数字强 */
+  word-break:break-word;
+}
+/* 色调：值本身的语义（正常/注意/异常/无数据），左侧亮条同步上色。
+   ★ 用 tone-* 而不是 lv-*：日志行已经有 lv-info/lv-warn，
+     两套 class 混用会让"日志黄字"和"仪表黄条"互相串样式。 */
+.brow.tone-ok   {border-left-color:var(--ok)}
+.brow.tone-warn {border-left-color:var(--warn)}
+.brow.tone-warn .bv{color:var(--warn)}
+.brow.tone-error{border-left-color:var(--err)}
+.brow.tone-error .bv{color:var(--err)}
+.brow.tone-off  .bv{color:#5b667a}
+
+/* ─────────── 日志 ─────────── */
+.log{
+  flex:1;overflow-y:auto;font-size:12px;line-height:1.6;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  background:#0d1117;border-radius:10px;padding:9px;
+  -webkit-overflow-scrolling:touch;
+}
+.log .ln{display:flex;gap:8px;padding:1px 0;word-break:break-word}
+.log .tm{color:#5b667a;flex-shrink:0;font-variant-numeric:tabular-nums}
+.log .tx{flex:1}
+.log .lv-info{color:#9fb0c9} .log .lv-warn{color:var(--warn)}
+.log .lv-error{color:var(--err)} .log .lv-ok{color:var(--ok)}
+
+.hint{color:var(--dim);font-size:13px}
+.hint.small{font-size:11px;margin:8px 0 0;line-height:1.5}
+
+/* ─────────── 底部页签（只在手机上出现） ─────────── */
+.tabs{display:none}
+
+/* ══════════ 手机 / 窄屏：单栏 + 页签切换 ══════════ */
+@media (max-width:860px){
+  .main{flex-direction:column}
+  .side{
+    width:auto;border-left:none;border-top:1px solid var(--line);
+    /* 手机上一屏只显示一个面板，由页签控制 */
+    position:absolute;inset:0;top:0;padding:10px;z-index:5;
+    background:var(--bg);display:none;
+  }
+  .side[data-tab="ops"]{display:flex}
+  /* 地图占据整块，侧栏浮在上面 */
+  .mapwrap{position:absolute;inset:0}
+  .main{position:relative;flex:1}
+  /* 地图页签：侧栏不显示，让出整屏给地图 */
+  .side[data-tab="none"]{display:none}
+
+  .tabs{
+    display:flex;border-top:1px solid var(--line);background:var(--panel);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tabs button{
+    flex:1;min-height:52px;border:none;border-radius:0;background:transparent;
+    color:var(--dim);font-size:13px;
+  }
+  .tabs button.on{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+  /* 日志页签时让日志占满 */
+  .side[data-tab="log"]{display:flex}
+  /* ★ 但「实时数据」面板要留着：它正是替代刷屏日志的那块，
+     手机上切到日志页时更需要它（不然又只剩一堆快滚的日志）。
+     其余卡片（模式/遥控/导航/搬运）仍然隐藏。 */
+  .side[data-tab="log"] .card:not(.grow):not(#cardBoard){display:none}
+  .side[data-tab="log"] #cardBoard{flex-shrink:0}
+  .side[data-tab="log"] .card.grow{flex:1;min-height:0}
+  /* ★ 手机上把 8 行排成两列（4 行高），给日志留出空间。
+     固定槽位才敢这么做：key 和位置都是写死的，两列不会出现
+     "换行后某个值跑到别处"的错位。 */
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px}
+  .brow{padding:5px 7px}
+  .brow .bl{min-width:36px}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   通用模态框（替代 prompt/confirm）
+   ★ 手机上从底部弹出，像原生操作表，拇指够得着；
+     电脑上居中显示。所有可点项 ≥44px。
+   ══════════════════════════════════════════════════════════════ */
+.modal-mask{
+  position:fixed;inset:0;z-index:80;display:flex;
+  align-items:flex-end;justify-content:center;      /* 手机：底部弹出 */
+  background:rgba(6,9,13,.66);backdrop-filter:blur(3px);
+  padding:0;animation:fadeIn .12s ease;
+}
+.modal-box{
+  width:100%;max-width:520px;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:18px 18px 0 0;                       /* 手机：上圆角 */
+  padding:20px 18px calc(18px + env(safe-area-inset-bottom));
+  animation:slideUp .18s cubic-bezier(.2,.9,.3,1);
+  max-height:88vh;overflow-y:auto;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(28px);opacity:.4}to{transform:none;opacity:1}}
+
+.modal-title{margin:0 0 4px;font-size:17px;font-weight:600}
+.modal-desc{margin:0 0 14px;font-size:13px;color:var(--dim);line-height:1.5}
+.modal-desc:empty{display:none}
+.modal-body{margin-bottom:16px}
+.modal-body input[type=text],.modal-body input[type=number]{
+  width:100%;padding:13px 15px;font-size:16px;                /* 16px 防 iOS 自动放大 */
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  color:var(--txt);outline:none;min-height:48px;
+}
+/* ★ inputmode=decimal 的输入框也要吃这套样式：手机上调数值是主要交互，
+   键盘弹出来只给数字才不用切输入法。 */
+.modal-body input[inputmode=decimal]{font-variant-numeric:tabular-nums}
+.modal-body input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1;min-height:48px}
+
+/* 可选列表项（点位/地图/路线的点选） */
+.opt-list{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow-y:auto}
+.opt{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 14px;min-height:48px;cursor:pointer;
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  transition:border-color .1s ease,background .1s ease;
+  -webkit-user-select:none;user-select:none;
+}
+.opt:active{transform:scale(.985)}
+.opt.on{border-color:var(--accent);background:rgba(76,154,255,.14)}
+.opt .tick{
+  width:22px;height:22px;flex:0 0 22px;border-radius:50%;
+  border:2px solid var(--line);display:flex;align-items:center;
+  justify-content:center;font-size:13px;color:transparent;
+}
+.opt.on .tick{border-color:var(--accent);background:var(--accent);color:#fff}
+.opt .nm{flex:1;font-size:15px}
+.opt .sub{font-size:12px;color:var(--dim)}
+/* 顺序徽标（选途经点时显示第几个） */
+.opt .ord{
+  min-width:22px;text-align:center;font-size:12px;font-weight:600;
+  color:var(--accent);
+}
+/* 步进器（循环次数） */
+.stepper{display:flex;align-items:center;gap:12px;justify-content:center}
+.stepper button{width:56px;min-height:48px;font-size:20px;padding:0}
+.stepper .val{font-size:22px;font-weight:600;min-width:64px;text-align:center}
+
+/* ─────────── 位姿编辑（x / y / yaw）───────────
+   ★ 以前存点位只有"点地图 + 起个名字"，yaw 被写死成 0 —— 于是所有点位
+     都是"朝东站"，导航到位后车身朝向全靠运气。这里把 yaw 做成可视化的
+     方向盘：点一下圆盘、或者点 0/90/180/270 快捷按钮就能定朝向，
+     不用在手机上敲弧度。 */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field > span{font-size:12px;color:var(--dim)}
+.pose-grid{display:flex;gap:10px}
+.pose-grid .field{flex:1;margin-bottom:0}
+
+.yaw-wrap{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.yaw-dial{
+  position:relative;width:108px;height:108px;flex:0 0 108px;
+  border-radius:16px;background:var(--panel2);border:1px solid var(--line);
+  cursor:pointer;touch-action:none;
+  -webkit-user-select:none;user-select:none;
+}
+/* 十字准线：让"圆心=当前位置"这件事一眼可见 */
+.yaw-dial::before,.yaw-dial::after{
+  content:'';position:absolute;background:var(--line);
+}
+.yaw-dial::before{left:0;right:0;top:50%;height:1px}
+.yaw-dial::after{top:0;bottom:0;left:50%;width:1px}
+/* 箭头：默认指上（= 世界坐标 yaw 90°），靠 JS 改 rotate
+   transform-origin 在底部，也就是圆心 */
+.yaw-dial .arrow{
+  position:absolute;left:50%;top:13%;height:37%;width:2px;margin-left:-1px;
+  background:var(--accent);transform-origin:50% 100%;
+  transition:transform .06s linear;
+}
+.yaw-dial .arrow::after{
+  content:'';position:absolute;top:-6px;left:-4px;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-bottom:7px solid var(--accent);   /* 向上的三角，就是箭头尖 */
+}
+.yaw-dial .hub{
+  position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
+  border-radius:50%;background:var(--accent);
+}
+.yaw-side{flex:1;display:flex;flex-direction:column;gap:8px}
+.yaw-side .field{margin-bottom:0}
+.yaw-quick{display:flex;gap:6px}
+.yaw-quick button{
+  flex:1;min-height:38px;padding:0;font-size:13px;border-radius:9px;
+}
+.yaw-quick button.on{border-color:var(--accent);color:var(--accent)}
+/* 类型二选一（搬货点 / 导航点） */
+.seg{display:flex;gap:8px}
+.seg button{flex:1;min-height:44px;font-size:14px}
+.seg button.on{border-color:var(--accent);color:var(--accent);
+  background:rgba(76,154,255,.14)}
+
+@media (min-width:900px){
+  .modal-mask{align-items:center;padding:24px}
+  .modal-box{border-radius:18px;animation:popIn .16s ease}
+  @keyframes popIn{from{transform:scale(.96);opacity:.5}to{transform:none;opacity:1}}
+}

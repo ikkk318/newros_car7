@@ -1,0 +1,5 @@
+tasks:
+- pick: 1号槽内
+  drop: 3号货架
+  loops: 1
+  route: ''

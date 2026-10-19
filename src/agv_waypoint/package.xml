@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息 -->
+  <name>agv_waypoint</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 点位 / 路线管理。
+    WaypointStore 纯逻辑点位存储（增删查列 + YAML 持久化，点位分 cargo/nav 两类），
+    RouteStore 纯逻辑路线存储（路线 = 若干点位的位姿快照，按点名复制），
+    store_dispatch 纯逻辑调度（把 resource + action 翻译成对上面两个存储的调用），
+    waypoint_node 对外只提供 1 个统一服务 /agv/store（取代原先点位 4 个 + 路线 4 个）。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>agv_interfaces</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

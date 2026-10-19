@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<!--
+  AGV 500x500 差速底盘 —— 机器人主描述文件（拼装入口）
+  ==================================================================
+  坐标系 : ROS REP-103   X 向前 | Y 向左 | Z 向上
+  原点   : 两驱动轮轴中点在地面的投影 (z = 0)
+  轮系   : 四轮差速 = 2 驱动轮(居中·左右布置) + 2 万向轮(前后·中线上)
+
+  俯视图（上方为车头 +X）：
+
+              caster_front   (x=+0.20 , y= 0   )
+                    |
+                    |
+   right_wheel =====+===== left_wheel
+   (x=0, y=-0.22)   |     (x=0, y=+0.22)
+                    |                <- 驱动轴在 x = drive_x = 0（居中）
+                    |
+              caster_rear    (x=-0.20 , y= 0   )
+
+  支撑多边形 = 菱形：纵向 0.40 m（前后万向轮）、横向 0.44 m（左右驱动轮）
+
+  文件拼装结构（参考 chapt8 fishbot_description 的模块化组织）：
+    common_inertia.xacro           惯性宏库（长方体/圆柱/球体）
+    base.urdf.xacro                车体 base_footprint + base_link
+    actuator/wheel.urdf.xacro      驱动轮宏（左/右各实例化一次）
+    actuator/caster.urdf.xacro     万向轮宏（前/后各实例化一次）
+    sensor/laser.urdf.xacro        激光雷达
+    sensor/imu.urdf.xacro          IMU
+    plugins/gazebo_classic.xacro   Gazebo Classic 11 插件
+
+  仿真后端：ROS 2 Humble + Gazebo Classic 11（本机唯一路径）：
+    xacro agv_500.urdf.xacro
+
+  ⚠ 改尺寸只改下面的「可调参数」区，不要改实体定义。
+  ⚠ 纵向（前后）参数一律用 _x 后缀，横向（左右）用 track。
+  ⚠ 仿真模型数据与本包 v2.0 交付版一致；2026-10 仅在建图稳定性修复中调整了
+    plugins/gazebo_classic.xacro 的轮加速度限幅与里程计协方差（见该文件头注）。
+-->
+<robot name="agv_500" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 由 sim.launch.py 传入：使用 robot_localization EKF 融合里程计时置 false，
+       让 EKF 独占 odom→base_footprint 的 TF（详见 plugins/gazebo_classic.xacro）。 -->
+  <xacro:arg name="publish_odom_tf" default="true"/>
+
+  <!-- ==================== 可调参数：只改这里 ==================== -->
+  <xacro:property name="PI" value="3.141592653589793"/>
+
+  <!-- 车体 -->
+  <xacro:property name="body_L"    value="0.500"/>   <!-- 长(X) -->
+  <xacro:property name="body_W"    value="0.500"/>   <!-- 宽(Y) -->
+  <xacro:property name="body_H"    value="0.105"/>   <!-- 底盘厚 -->
+  <xacro:property name="clearance" value="0.025"/>   <!-- 离地间隙（主流差速底盘：电机在底盘内，轮子嵌入属正常） -->
+  <xacro:property name="body_mass" value="20.0"/>    <!-- 整备质量 -->
+
+  <!-- 驱动轮 -->
+  <xacro:property name="wheel_R"    value="0.050"/>  <!-- 半径 -->
+  <xacro:property name="wheel_W"    value="0.040"/>  <!-- 轮宽 -->
+  <xacro:property name="track"      value="0.440"/>  <!-- 轮距(左右轮心距, 沿 Y) -->
+  <xacro:property name="drive_x"    value="0.000"/>  <!-- 驱动轴纵向位置(X): 0 = 居中 -->
+  <xacro:property name="wheel_mass" value="0.5"/>
+
+  <!-- 万向轮（前后各一，位于车体中线上 y = 0） -->
+  <xacro:property name="caster_R"    value="0.025"/>
+  <xacro:property name="caster_fx"   value="0.200"/> <!-- 前万向轮 X -->
+  <xacro:property name="caster_rx"   value="-0.200"/><!-- 后万向轮 X -->
+  <xacro:property name="caster_mass" value="0.2"/>
+
+  <!-- 激光雷达：装在车体几何中心，扫描面 z = 0.170（高于底盘顶面 0.130） -->
+  <xacro:property name="laser_R"    value="0.035"/>
+  <xacro:property name="laser_H"    value="0.040"/>
+  <xacro:property name="laser_x"    value="0.000"/>  <!-- 纵向位置(X): 车体几何中心（与 IMU 同轴） -->
+  <xacro:property name="laser_z"    value="0.170"/>  <!-- 扫描面高度(光学中心) -->
+  <xacro:property name="laser_mass" value="0.2"/>
+
+  <!-- ============ 雷达扫描范围：全向 360°（固定，不可配） ============
+       扫描面 z = 0.170 高于底盘顶面 z = 0.130（clearance 0.025 + body_H 0.105），
+       且雷达装在车体几何中心，四周无自身结构遮挡，故整圈射线都有效。
+
+       为什么必须是 360°（实测结论）：只给前向 ±90° 时，车开到开阔处（四周墙面都在
+       4~8 m 外）可见点退化到几十个远点，slam_toolbox 扫描匹配响应面被抹平，航向被
+       顶到角度搜索窗边缘（实测偏 ~21°，等效地图错位 1.4 m），地图后期整体错位/变形
+       —— 这就是「前面建得很好、快建完突然偏移」的根因。改成 360° 后跳变 0 次，
+       地图与真值逐墙重合。导航侧同样受益：车身后方不再是盲区。 -->
+  <xacro:property name="laser_scan_min" value="${-PI}"/>
+  <xacro:property name="laser_scan_max" value="${PI}"/>
+  <!-- 采样数：保持 1°/点（360° → 361 点，首尾重合于 ±π） -->
+  <xacro:property name="laser_samples" value="361"/>
+
+  <!-- IMU -->
+  <xacro:property name="imu_z"    value="0.100"/>
+  <xacro:property name="imu_mass" value="0.05"/>
+
+  <!-- ==================== 材质 ==================== -->
+  <material name="c_body">  <color rgba="0.25 0.50 0.80 1.0"/></material>
+  <material name="c_wheel"> <color rgba="0.15 0.15 0.15 1.0"/></material>
+  <material name="c_caster"><color rgba="0.60 0.60 0.60 1.0"/></material>
+  <material name="c_laser"> <color rgba="0.90 0.60 0.10 1.0"/></material>
+
+  <!-- ==================== 引入各模块宏定义 ==================== -->
+  <!-- 车体 -->
+  <xacro:include filename="base.urdf.xacro"/>
+  <!-- 执行器：驱动轮 + 万向轮 -->
+  <xacro:include filename="actuator/wheel.urdf.xacro"/>
+  <xacro:include filename="actuator/caster.urdf.xacro"/>
+  <!-- 传感器：激光雷达 + IMU -->
+  <xacro:include filename="sensor/laser.urdf.xacro"/>
+  <xacro:include filename="sensor/imu.urdf.xacro"/>
+  <!-- 仿真插件：Gazebo Classic 11 -->
+  <xacro:include filename="plugins/gazebo_classic.xacro"/>
+
+  <!-- ==================== 实例化：拼装整车 ==================== -->
+  <!-- 车体 -->
+  <xacro:base_xacro/>
+
+  <!-- 驱动轮（左右布置，y = ±track/2；驱动轴 x = drive_x 居中） -->
+  <xacro:wheel_xacro wheel_name="left"  y_pos="${track/2}"/>   <!-- y = +0.220 -->
+  <xacro:wheel_xacro wheel_name="right" y_pos="${-track/2}"/>  <!-- y = -0.220 -->
+
+  <!-- 万向轮（前后各一，中线上 y = 0） -->
+  <xacro:caster_xacro caster_name="caster_front" cx="${caster_fx}"/>  <!-- x = +0.200 -->
+  <xacro:caster_xacro caster_name="caster_rear"  cx="${caster_rx}"/>  <!-- x = -0.200 -->
+
+  <!-- 传感器 -->
+  <xacro:laser_xacro/>
+  <xacro:imu_xacro/>
+
+  <!-- ==================== 仿真插件实例化（Gazebo Classic 11） ==================== -->
+  <xacro:gazebo_classic_plugins publish_odom_tf="$(arg publish_odom_tf)"
+                                laser_samples="${laser_samples}"/>
+
+</robot>

@@ -1,0 +1,10 @@
+free_thresh: 0.25
+image: 地图10月19日16时.pgm
+mode: trinary
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -10.7
+- -9.81
+- 0
+resolution: 0.025

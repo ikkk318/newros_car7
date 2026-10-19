@@ -1,0 +1,27 @@
+# 里程计参数 —— 理想值（Gazebo 差速插件）
+# ==================================================================
+# Gazebo 差速插件用的是「理想里程计」：
+# <odom> 直接由插件按运动学公式积分得到，不涉及编码器量化误差。
+# 本文件把同一套参数集中在这里，方便与实测值（odom_calib_real.yaml）对照。
+# ------------------------------------------------------------------
+# 单位一律用米 / 弧度，不要用毫米。
+# ==================================================================
+
+agv_description_odom_calib:
+  ros__parameters:
+    # 几何参数（必须与 agv_500.urdf.xacro 的「可调参数」一致）
+    wheel_radius: 0.050        # 轮半径 [m]
+    wheel_separation: 0.440    # 轮距   [m]  左右轮心距
+
+    # 编码器（理想值 = 无量化误差）
+    ticks_per_rev: 1
+    gear_ratio: 1.0
+
+    # 里程计发布
+    publish_frequency: 50.0    # [Hz]
+    odom_frame: odom
+    base_frame: base_footprint
+
+    # 运动学限幅（与插件保持一致）
+    max_linear_velocity: 1.0   # [m/s]
+    max_angular_velocity: 1.0  # [rad/s]

@@ -1,0 +1,55 @@
+# AgvStore.srv —— 点位 / 路线统一存储服务（取代原先 8 个同构服务）
+# ------------------------------------------------------------------
+# 原先有 8 个服务：Waypoint{Save,Get,List,Delete} + Route{Save,Get,List,Delete}，
+# 两两结构完全相同，都是"给一个名字，对一个带名字的位姿列表做增删查列"。
+# 现在合并成这一个：用 resource 选资源、用 action 选动作。
+#
+# 为什么能合并（不是硬凑）：点位就是"只有 1 个位姿的资源"，
+# 路线就是"有 N 个位姿的资源"——两者本来是同一个东西。合并后：
+#   · 校验、回执 ok/message 只有一处实现，不会出现"这个服务有 ok、那个没有"；
+#   · 调用方从 8 个客户端降到 1 个；
+#   · 新增一种资源（如"工位"）不用再加 4 个服务。
+#
+# resource / action 取值：
+#   resource = "waypoint"  点位
+#   resource = "route"     路线（存的是点名列表，按点名从点位表复制位姿快照）
+#   action   = "save"      存/覆盖（waypoint 用 x/y/yaw/kind；route 用 point_names）
+#   action   = "get"       按名字查一个（位姿放 items）
+#   action   = "list"      列出全部（按名字排序；名字与个数放 names / counts）
+#   action   = "delete"    删一个（不存在则 ok=false，不报错）
+#
+# ★ 响应字段按 (resource, action) 组合取值，见下方矩阵。别默认"list 一定有 items"。
+#
+# ★ 本服务只负责"存取"，不判断"点位是否可达"——那是目标点判据 GoalValidator
+#   （agv_common.goal_check）的事；但 route+save 会校验途经点名是否都存在
+#   ——有点名不存在就整条拒绝，不写半条路线。
+
+string   resource      # 资源类型："waypoint" / "route"
+string   action        # 动作："save" / "get" / "list" / "delete"
+string   name          # 资源名（save / get / delete 用；list 忽略）
+float64  x             # 仅 waypoint+save：位置 x（map 坐标系，m）
+float64  y             # 仅 waypoint+save：位置 y（m）
+float64  yaw           # 仅 waypoint+save：朝向（rad）
+string   kind          # 仅 waypoint+save："cargo" / "nav"（留空按 cargo 处理）
+string[] point_names   # 仅 route+save：途经点名列表（按行进顺序，至少 1 个）
+---
+# 响应字段取值矩阵（✓=有值，—=空/默认）：
+#   resource  action   ok  message  items            names  counts  count
+#   waypoint  save     ✓   ✓        —                —      —       0
+#   waypoint  get      ✓   ✓        1 条（所查点位）  —      —       1
+#   waypoint  list     ✓   ✓        全部点位         ✓      ✓(全 1) 条目数
+#   waypoint  delete   ✓   ✓        —                —      —       0
+#   route     save     ✓   ✓        —                —      —       写入点数
+#   route     get      ✓   ✓        该路线全部途经点  —      —       途经点数
+#   route     list     ✓   ✓        —（见下★）      ✓      ✓       条数
+#   route     delete   ✓   ✓        —                —      —       0
+#
+# ★ route+list 的 items 故意为空：items 里每项的 name 是"途经点名"，
+#   而路线列表要区分"哪条路线的哪些点"——一个扁平数组表达不了这层归属，
+#   硬填会让调用方误以为 name 是路线名。要看某条路线的途经点请用 route+get。
+bool       ok          # 是否成功（★ 每个动作都会给，包括 list——不再有"缺 ok"的服务）
+string     message     # 中文回执，可直接打印
+NamedPose[] items      # get：该资源的位姿列表；waypoint+list：全部点位；其余为组合见上矩阵
+string[]   names       # 仅 list：资源名列表（与 counts 同序）
+uint32[]   counts      # 仅 list：各资源的位姿个数（与 names 同序）
+uint32     count       # get：位姿个数；save(route)：实际写入的途经点数；list：条目总数

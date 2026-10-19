@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息 -->
+  <name>agv_bringup</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 参数中心 + 总启动。
+    config/ 下 default 打底 + real 可选覆盖层（launch 参数 param_profile 选层），
+    agv_stack.launch.py 一条命令拉起点位/路线服务、搬货服务、任务层与速度仲裁
+    （可选带 Nav2 导航栈），并按所选地图注入点位/路线文件。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖：被拉起的各节点包 -->
+  <exec_depend>agv_waypoint</exec_depend>
+  <exec_depend>agv_lift</exec_depend>
+  <exec_depend>agv_task</exec_depend>
+  <exec_depend>agv_hardware</exec_depend>
+  <exec_depend>agv_navigation</exec_depend>
+  <exec_depend>agv_common</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

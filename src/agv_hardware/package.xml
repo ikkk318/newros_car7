@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <!-- 包基本信息：名称、版本、描述、维护者与许可证 -->
+  <name>agv_hardware</name>
+  <version>0.1.0</version>
+  <description>
+    AGV 顶升搬运车 —— 硬件抽象层（★ 硬件无关边界，换实车只动此包）。
+    节点：velocity_arbiter（把规划器速度与反应式避障/安全叠加后发底盘）。
+    纯逻辑（避障策略/地图判据/限幅）在 agv_common，本包只做消息搬运，保持同构替换。
+    搬货机器不在本包：全项目只有一个搬货服务，见 agv_lift 的 cargo_node。
+  </description>
+  <maintainer email="3030067800@qq.com">yuki</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>agv_interfaces</exec_depend>
+  <exec_depend>agv_common</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <!-- 导出信息：声明构建类型为 ament_python（纯 Python 包） -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
