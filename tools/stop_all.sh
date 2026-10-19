@@ -4,7 +4,7 @@
 #
 #  用法（你自己的终端里跑，不需要 source）：
 #      cd /home/yuki/agv/newros_car7
-#      bash tools/webtest/stop_all.sh
+#      bash tools/stop_all.sh
 #
 #  为什么要先 SIGINT 再 SIGKILL：
 #      ros2 launch / Gazebo / Nav2 都需要 SIGINT 才能干净退出（释放 DDS 端口、

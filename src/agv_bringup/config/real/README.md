@@ -1,4 +1,11 @@
-# real/ 覆盖层 —— 实车专属参数（阶段三填，现留空）
-# ------------------------------------------------------------------
-# 阶段三把真实硬件的差异写这里的同名文件（如 lift.yaml / task.yaml），
-# 总启动带 args 时选择 real 层即可覆盖 default。现为空占位。
+# real/ 覆盖层 —— 实车专属参数
+
+默认**空目录**：不传 `param_profile:=real` 时它完全不参与。
+接真实硬件后，把与 `default/` 不同的参数写进这里的**同名文件**，
+启动时传 `param_profile:=real` 就会覆盖。
+
+```bash
+ros2 launch agv_bringup agv_stack.launch.py with_sim:=true param_profile:=real
+```
+
+只写要改的键，不用整份复制——加载器做的是深合并（`agv_common.config_loader`）。

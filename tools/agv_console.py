@@ -40,7 +40,7 @@ agv_console.py —— AGV 简化终端控制台（一个脚本搞定日常测试
 用法
 ----
 1) 交互式（推荐）
-     cd ~/new_ros_car && source install/setup.bash
+     cd <工作区根> && source install/setup.bash
      python3 tools/agv_console.py
 2) 直接给子命令
      python3 tools/agv_console.py check     # 一键自检（要业务节点在跑）
