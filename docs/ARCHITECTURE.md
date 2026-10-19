@@ -75,6 +75,30 @@
 `agv_common` 是全项目的"纯逻辑底座"：几何、判据、避障策略、参数加载、鉴权都在这里，
 所以这些模块**不需要 ROS 也能跑**——这是它们能被反复验证的原因。
 
+### 3.1 网关内部模块（`agv_web/gateway/`）
+
+网关原来是单文件 3236 行，按"叶子 → 状态 → 动作 → 装配"拆成 8 个模块 + `web_gateway.py` 入口。
+依赖只能从上往下，反向 import 会让它重新长成一个循环。
+
+| 模块 | 职责 | 依赖 |
+|---|---|---|
+| `util.py` | 叶子：日志转发判据、局域网地址、静态目录、`tasks.yaml` 读写 | 无（不 import 本包任何模块，也不 import rclpy） |
+| `stack.py` | `StackRunner` + 进程组 / 共享内存 / 端口清理 | `util`、`stack_manager` |
+| `state.py` | `StateMixin`：日志、ROS 回调、位姿/TF、`snapshot()` | `util`、`grid_image`、`status_board` |
+| `commands.py` | `CommandMixin`：遥控、模式、指令/服务、任务缓冲、地图库 | `util`、`stack_manager` |
+| `node.py` | `WebGateway(StateMixin, CommandMixin, Node)`：把上面三块装起来 | `state`、`commands`、`stack`、`util` |
+| `web_app.py` | `ApiBase` + `ROUTE_SPECS`（26 条）+ `make_app()` | `handlers_*`、`util` |
+| `handlers_ops.py` | `ApiOps`：有副作用的接口（遥控/指令/栈起停/退出） | `stack_manager`、`util` |
+| `handlers_data.py` | `ApiData`：地图库 / 任务缓冲 / 路线 / 自检 | 仅 `aiohttp` |
+| `web_gateway.py` | 入口 `main()`：传输设置、spin 线程、`web.run_app`、退出收尾 | 全部 |
+
+四条不能破的约束：
+
+1. `_gw_lock` 是**非重入** `Lock`，而 `log()` 内部要取它 → 持锁时绝不调 `log()`，只改字段。
+2. 两个 mixin **不得定义 `__init__`**，否则 `Node.__init__` 被吞，第一次建订阅才炸。
+3. `import pathlib`/`os` 之类放在模块顶部，不许靠"晚导入"躲 `NameError`。
+4. `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` 必须在 `rclpy.init()` **之前**写进环境变量。
+
 ---
 
 ## 4 节点职责

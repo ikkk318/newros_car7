@@ -1,6 +1,6 @@
 """agv_web —— AGV 网页控制台（后端网关 + 前端静态页）。"""
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from glob import glob
 import os
 
@@ -9,7 +9,10 @@ package_name = 'agv_web'
 setup(
     name=package_name,
     version='0.1.0',
-    packages=[package_name],
+    # ★ 必须 find_packages()：网关实现拆到了 agv_web/gateway/ 子包里，
+    #   写死 packages=[package_name] 只会装顶层包，运行时报
+    #   ModuleNotFoundError: No module named 'agv_web.gateway'。
+    packages=find_packages(exclude=['test', 'test.*']),
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
