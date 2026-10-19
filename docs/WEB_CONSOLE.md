@@ -357,11 +357,12 @@ ros2 launch agv_web web_console.launch.py token:=agv2024
 规则：
 
 - **每个顶层符号只能声明一次**（重复 `const` 整页 `SyntaxError` 白屏）
+- **加载顺序不能换**：`core` 提供 `$`/`S`/`api()`，`map` 顶层就要用 `$('map')` 取 canvas
 - `canvas` 在 `map.js` 顶层取 DOM → 4 个 script 必须在 `</body>` 前
 - `app.css` 单文件，不拆
 - 改完 `node --check` 逐个过，再浏览器实测
 
-坐标约定（写在 `app.js` 头注，拆分后仍在 `map.js`）：
+坐标约定（写在 `map.js` 头注）：
 
 ```
 ROS 世界：x 右、y 上，单位米

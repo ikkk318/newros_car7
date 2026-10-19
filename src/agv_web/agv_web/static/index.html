@@ -139,7 +139,7 @@
         <div id="wpList" class="wp-list"><p class="hint small">加载地图后显示点位</p></div>
         <div class="row">
           <!-- ★ 重新定位：以前叫「在此重新定位」，且内部直接复用当前位姿，
-               等于什么都没修正（详见 app.js relocalize 的注释）。
+               等于什么都没修正（详见 console.js relocalize 的注释）。
                现在点了会弹框让你指定"车实际在哪、朝哪"，和 RViz 的
                2D Pose Estimate 一个语义。 -->
           <button id="btnReloc" class="btn-ghost">重新定位…</button>
@@ -262,6 +262,13 @@
   </div>
 </div>
 
-<script src="/static/app.js"></script>
+<!-- ★ 四个经典脚本共享同一全局词法环境，顺序不能换：
+     core 提供 $ / S / api()，map 顶层就要用它取 canvas；
+     console 和 ui 只在函数里互相引用，放后面即可。
+     任何一个文件顶层重复声明同名 const，整页会 SyntaxError 白屏。 -->
+<script src="/static/core.js"></script>
+<script src="/static/map.js"></script>
+<script src="/static/console.js"></script>
+<script src="/static/ui.js"></script>
 </body>
 </html>
