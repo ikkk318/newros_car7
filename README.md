@@ -79,7 +79,7 @@ src/
 ├── agv_task/         task_manager_node：指令门卫、搬运状态机、导航执行、安全
 ├── agv_lift/         cargo_node：搬货服务（唯一硬件口子）
 ├── agv_hardware/     velocity_arbiter：近障减速 + 择空 + 限幅
-└── agv_web/          网页网关 + 静态前端 + 栈管理 + 仪表盘
+└── agv_web/          网页网关（gateway/ 8 模块）+ 4 个前端脚本 + 栈管理
 
 tools/
 ├── agv_console.py    终端控制台（建图/导航/点位/路线/任务/自检）

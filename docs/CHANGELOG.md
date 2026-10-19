@@ -13,10 +13,15 @@
 |---|---|
 | 文档 | 9 份根文档 + 6 份包 README → `README` + `docs/` 6 篇；三份修复报告与 git 说明归档 |
 | 测试 | 删除 `src/*/test`（31 文件 541 项）与 `tools/webtest`（整目录）。回归代码在 `86706ea`，可 `git checkout` 取回 |
-| 后端 | `web_gateway.py` 3236 行 → `gateway/` 8 个模块 + 130 行入口 |
-| 前端 | `app.js` 2685 行 → `core.js` / `map.js` / `console.js` / `ui.js` |
+| 后端 | `web_gateway.py` 3236 行 → `gateway/` 8 个模块（256~691 行）+ 150 行入口 `main()` |
+| 前端 | `app.js` 2685 行 → `core.js` 567 / `map.js` 583 / `console.js` 805 / `ui.js` 780 |
 | 文件 | 删零引用 launch（`web_mapping`、`cargo`、`waypoint`）、`.bak/`、缓存、1.1G 编辑器索引 |
+| 死码 | 删 `agv_task/init_robot_pose.py`（只是 `goto_pose` 的薄封装，零引用） |
 | 保留入口 | 网页 `web_console`、业务栈 `agv_stack`、导航/建图 `navigation`/`mapping`、仿真 `sim`、终端控制台、`gazebo_view`、`stop_all`、`make_world_map` |
+
+**没做的事**：`tools/agv_console.py`（1474 行）**故意不拆**。它全是交互式
+`input()` 流程，拆完无法自动回归，收益（可读性）抵不上"日常入口被改坏"的风险。
+只保留了文件里原有的 7 个分节标题，要拆时按那 7 段切即可。
 
 **为什么删测试**：用户明确要求（"检查测试的代码文件可以直接删除"）。
 代价是失去自动化回归，补偿是每阶段手动冒烟（`OPERATIONS.md` §9）与 git 可回滚。
