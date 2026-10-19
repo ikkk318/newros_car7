@@ -140,6 +140,14 @@ def main(args=None):
             except Exception as exc:
                 node.get_logger().error(f'停止栈失败：{exc}')
         executor.shutdown()
+        # ★ 必须等 spin 线程真的退出，再 destroy_node()。
+        #   不等的话，主线程在 C++ 侧销毁节点时，spin 线程可能还卡在
+        #   executor.spin() 里持有同一个 executor —— 实测报
+        #     terminate called without an active exception
+        #     process has died [exit code -6]      （SIGABRT）
+        #   `ros2 launch` 会把这行当成"网关异常死亡"，脚本也据此判失败。
+        #   join 带超时：万一 spin 卡住，也还是要正常退出。
+        spin_thread.join(timeout=3.0)
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
