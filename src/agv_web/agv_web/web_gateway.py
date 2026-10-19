@@ -2801,7 +2801,6 @@ _CLEANUP_PATTERNS = (
     'velocity_arbiter', 'agv_lift',
     'teleop_twist_keyboard',
     'rviz2',
-    'webtest/injector.py',         # 测试注入器，别让它冒充真数据
 )
 
 # 这些 launch **不能杀**：它们是"当前这个网页网关自己"。
@@ -3207,7 +3206,7 @@ def main(args=None):
             node.log('error', f'端口 {node.port} 已被占用 —— 可能上一次的'
                               f'控制台还没退干净。换个端口重试（例如 '
                               f'port:={int(node.port) + 1}），或先执行 '
-                              f'bash tools/webtest/stop_all.sh 清理。')
+                              f'bash tools/stop_all.sh 清理。')
         elif getattr(exc, 'errno', None) in (_errno.EACCES, 13):
             node.log('error', f'没有权限绑定端口 {node.port}（1024 以下端口'
                               f'需要 root）。请改用 1024 以上的端口。')

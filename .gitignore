@@ -43,9 +43,3 @@ __pycache__/
 maps/.launch/
 # 建图中的草稿点位，保存地图时会被并入正式地图，属于过程文件
 maps/_mapping/
-
-# ---------- 6. 测试产物 ----------
-# tools/webtest 每跑一次就刷一批：测试日志、帧计数、观感预览图
-tools/webtest/*.log
-tools/webtest/*.count
-tools/webtest/*.png
