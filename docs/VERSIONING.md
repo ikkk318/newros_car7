@@ -211,18 +211,111 @@ git push
 
 ---
 
-## 7 环境相关（本项目踩过的）
+## 7 推不上去怎么办（本项目实测过的一整套）
 
-- **git 的代理配置与终端环境变量是两套**。本项目曾配了
-  `http.proxy=http://127.0.0.1:7897`，代理换端口后 `git fetch` 就报
-  `gnutls_handshake() failed`，但 `curl` 正常。修复：
+**先跑一条命令，别瞎试**：
+
+```bash
+bash tools/release.sh --doctor
+```
+
+它会把「远端地址 / 三条网络通道 / 两种凭据 / 标签对照 / 未推送提交」一次列清楚，
+**只读，不改任何东西**。
+
+### 7.1 为什么 VSCode 能推、终端不能
+
+这是两套独立的东西，不是同一个 git 在跑：
+
+| | VSCode 里点推送 | 终端里敲 `git push` |
+|---|---|---|
+| 走哪个代理 | Electron 读**系统代理 / 环境变量**（`gsettings`、`http_proxy`） | git 只读自己的 `http.proxy` 配置，**不读 Electron 的设置** |
+| 用什么认证 | 内置 GitHub 登录态，通过 `GIT_ASKPASS` 把 token 喂给 git | 找 `credential.helper`；没有就**交互式问用户名密码** |
+
+所以两边都"能或不能"完全可能不一致。本项目就是典型：
+
+- 终端 git **没有任何 `http.proxy` 配置**（早先清过），于是直连 github.com:443。
+- 而 443 直连在本机是**间歇性**的 —— 同一分钟内连测，出现过 3/3 全超时，
+  也出现过 6/6 全通。TCP 能握手、TLS 被掐是最常见的形态。
+- 于是报错在两种之间跳：
+  - `GnuTLS recv error (-110): The TLS connection was non-properly terminated.`
+    → 走的是代理，但代理的 TLS 链路坏了
+  - `Failed to connect to github.com port 443 after 134998 ms: 连接超时`
+    → 没走代理，直连被卡死
+- VSCode 那边因为读了系统代理，命中了一条能用的线路，所以看起来"它能推"。
+
+**结论：报错不是"权限不够"，是通道没选对。** 重试同一个通道没有意义。
+
+### 7.2 三条通道怎么选（实测数据）
+
+```bash
+# 看诊断输出：HTTPS 443 / SSH 22 / 本地代理
+bash tools/release.sh --doctor
+```
+
+| 通道 | 本机实测 | 要不要代理 | 需要什么凭据 |
+|---|---|---|---|
+| HTTPS :443 直连 | 间歇，TLS 常被掐 | 不要 | token 或用户名密码 |
+| HTTPS 经代理 :7890 | 6/6 通过 | 要，且代理得活着 | 同上 |
+| **SSH :22 直连** | **3/3 通，稳定** | **完全不要** | 一把公钥 |
+
+**22 端口通常不受影响**，这是最省事的出路。本项目的做法：
+
+```bash
+# ① 生成密钥（一路回车，不设密码）
+ssh-keygen -t ed25519 -C "yuki@$(hostname)"
+
+# ② 把公钥贴到 GitHub
+cat ~/.ssh/id_ed25519.pub
+#    打开 https://github.com/settings/ssh/new → 粘贴 → Add SSH key
+
+# ③ 切换远端（脚本会顺手验证认证）
+bash tools/release.sh --use-ssh
+
+# ④ 之后所有 push 都不需要代理
+git push && bash tools/release.sh --push-all
+```
+
+验证认通没通：
+
+```bash
+ssh -T git@github.com
+# 成功输出：Hi ikkk318! You've successfully authenticated, ...
+# （退出码是 1，这是正常的，GitHub 不给 shell）
+```
+
+### 7.3 代理相关的两个具体坑
+
+- **端口在监听 ≠ 能用**。本项目 `127.0.0.1:7897` 一直处于 LISTEN，但经过它的
+  请求 100% 报 `SSL routines::unexpected eof`；同一时刻 `127.0.0.1:7890` 是好的。
+  所以诊断必须**真发一个 HTTPS 请求**，不能只 `nc -z` 测端口。
+- **git 的 `http.proxy` 和 shell 的 `http_proxy` 是两套配置**。本项目曾配了
+  `http.proxy=http://127.0.0.1:7897`，代理换端口后 `git fetch` 报
+  `gnutls_handshake() failed`，而 `curl` 正常。清掉：
   ```bash
   git config --global --unset http.proxy
   git config --global --unset https.proxy
   ```
-  （已清除。现在 git 直连，能通就别再设。）
-- **推送要认证**。`GIT_TERMINAL_PROMPT=0` 下报
-  `could not read Username for 'https://github.com'`，说明当前没有缓存凭据，
-  需要交互式输入一次，或改用 SSH。**在非交互环境里跑 push 会失败，属正常。**
+  现在由 `release.sh` 在推送前按实测结果**自动**决定要不要配代理（只写
+  `--local`，不动你的全局配置）。
+
+### 7.4 本脚本的自动换通道
+
+`--push-all` 和打标签模式在推之前都会探测通道；推失败时依次轮换
+**当前配置 → 直连 → 各代理 → SSH**，任一成功就继续。所以网络抖一下不用你重跑。
+
+```bash
+bash tools/release.sh --doctor      # 只看，不动
+bash tools/release.sh --push-all    # 补推全部本地标签
+bash tools/release.sh --list        # 本地 vs 远程对照
+bash tools/release.sh --use-ssh     # 永久切 SSH
+bash tools/release.sh --use-https   # 切回 HTTPS（必要时自动配代理）
+```
+
+### 7.5 其他
+
 - `http.version=HTTP/1.1` 与 `http.postBuffer=524288000` 已配在全局，
   大仓库推不上去时先别改它们。
+- 非交互环境（CI、脚本）里跑 push 会报
+  `could not read Username for 'https://github.com'`，属正常 —— 那里没有 TTY
+  可以让你输密码。用 SSH 或预置 token。
+
