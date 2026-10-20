@@ -23,13 +23,18 @@ git 的存储模型是**追加的**：每次 `commit` 都在历史末尾接一�
 这两个入口 GitHub 都放在代码页右上角，很容易被忽略。
 
 **可以这样验证**：在 GitHub 仓库地址后加 `/commits/main`，就能看到全部提交。
-本项目现在是 8 条，从 `86706ea 建库` 一路到 `0a5a3b4 退出修复`。
+本项目现在是 9 条，从 `86706ea 建库` 一路到 `b85b1dc 补版本文档`。
+
+> **两个症状要分开治，别混为一谈**：
+> - **文件列表变了 / 少了文件** → 正常，GitHub 在展示最新快照，历史都在。
+> - **Tags 页面空白** → 另一回事，是标签压根没推到远程（见 §4.1）。
 
 ---
 
 ## 2 本项目的实际历史（已核对远程）
 
 ```
+b85b1dc  docs: 补 VERSIONING.md 与版本标签
 0a5a3b4  fix(agv_web): 退出时等 spin 线程结束再销毁节点   ← v0.2.0
 29ce4cc  chore: 清理最后的死码
 b1eb342  refactor(web): app.js 拆成四个脚本
@@ -40,11 +45,16 @@ d8b5831  文档：GIT使用.md 改写                        ← v0.1.0（首次
 86706ea  建库：把 newros_car7 纳入版本控制
 ```
 
-两次推送都是 **fast-forward**（快进），不是强推：
+**三次推送都是 fast-forward（快进），一次 force push 都没有过**：
 
-- 第一次 `d8b5831` 推上去时，远端从空变成 `d8b5831`
-- 第二次 `0a5a3b4` 推上去时，远端从 `d8b5831` 快进到 `0a5a3b4`，
-  前面那 7 个提交原封不动留在链上
+| 时间 | 远端 main | 说明 |
+|---|---|---|
+| 10-19 19:46 | 空 → `d8b5831` | 首次上传 |
+| 10-19 22:54 | `d8b5831` → `0a5a3b4` | 7 个提交依次叠加，前面的原封不动 |
+| 10-20 11:42 | `0a5a3b4` → `b85b1dc` | 同上 |
+
+也就是说：**从建库到现在，任何一个历史文件都还能取回来**。
+GitHub 文件列表变了只说明"最新快照里没有它"，不说明"它被覆盖了"。
 
 验证命令（`YES` 就说明历史完整）：
 
@@ -89,27 +99,65 @@ GitHub 上就会出现 **Releases / Tags** 页面，能一版一版对比、下�
 
 ### 打一个标签并发布
 
+**最稳的是一条命令（推荐）**：
+
 ```bash
-# 1. 附带说明的标签（推荐，-a 会把说明和作者时间一起存进去）
-git tag -a v0.2.1 -m "修复：xxx 导致的 yyy"
-
-# 2. 只推这一个标签
-git push origin v0.2.1
-
-# 3. 或一次推全部标签
-git push origin --tags
+bash tools/release.sh v0.2.1 "修复：中止后卡执行中"
 ```
 
-> ⚠️ 标签**不会**跟着普通 `git push` 上传，必须显式推。这是最常见的
-> "我明明打了标签，GitHub 上没有"的原因。
+脚本会先推未推送的提交、再打 annotated 标签、**显式推该标签**，最后回读远程
+确认真的上去了。只看本地/远程对照：`bash tools/release.sh --list`。
+
+手工做同样的事：
+
+```bash
+git tag -a v0.2.1 -m "修复：xxx 导致的 yyy"   # -a 才有说明和作者时间
+git push origin refs/tags/v0.2.1              # ★ 显式推这个标签
+git ls-remote --tags origin                   # 回读：远程真有才算成功
+```
+
+---
+
+## 4.1 ★ 为什么 Tags 页面会是空的（本项目真实踩过）
+
+2026-10-20：本地已经打好两个标签，`git push origin main` 也显示成功，
+但 GitHub `/tags` 页面空白、`api.github.com/.../tags` 返回 `[]`。
+**commit 一个没丢，只是标签没推上去。** 原因有三层，任何一层都会导致空页面：
+
+| 坑 | 说明 |
+|---|---|
+| **`git push` 默认不传标签** | 只推当前分支。标签是独立引用，必须显式 `git push origin <tag>` |
+| **`--follow-tags` 有前提** | 它**只推 annotated 标签**，且**只推指向当前提交或其后代的**。轻量标签（`git tag v1`，不带 `-a`）永远不被带走；标签若指向较早的提交，也可能被跳过 |
+| **推送失败会被忽略** | 标签推送需要认证，一旦凭证没缓存/网络断，`git push --follow-tags` 可能在 commit 推成功后、标签阶段失败，而人只看到前面那行成功 |
+
+**排查顺序（照做三行定位）**：
+
+```bash
+# ① 本地有没有
+git tag -l
+
+# ② 远程有没有（这才是 GitHub 页面显示的依据）
+git ls-remote --tags origin
+
+# ③ 本地有、②为空 → 就是没推上去，补推即可
+git push origin refs/tags/v0.1.0 refs/tags/v0.2.0
+```
+
+**一次推全部标签**：`git push origin --tags`
+（注意：这会把本地所有标签都推上去，包括实验性的。只想推一个就指名道姓。）
+
+**关于 Releases**：Releases 是**建立在标签之上的发布说明**，没有标签就永远没有
+Releases。标签推上去之后，Tags 页立刻有内容；想要带正文的 Release，
+去 GitHub 的 `Releases → Draft a new release → 选已有 tag` 填写，或用
+`gh release create v0.2.0 --notes-file docs/CHANGELOG.md`。
 
 ### 标签打错了怎么改
 
 ```bash
 git tag -d v0.2.1                 # 删本地
-git push origin :refs/tags/v0.2.1 # 删远端
+git push origin :refs/tags/v0.2.1 # 删远端（冒号前缀 = 删除）
 git tag -a v0.2.1 <正确commit> -m "…"
-git push origin v0.2.1
+git push origin refs/tags/v0.2.1
 ```
 
 ---
@@ -121,15 +169,18 @@ git push origin v0.2.1
 git add -A
 git commit -m "fix(agv_task): 中止后回 IDLE，不再卡执行中"
 
-# 推到 GitHub（第一次之后 git 会记住分支，不用再写 origin main）
+# 推到 GitHub（第一次 push -u 之后，git 记住上游，不用再写 origin main）
 git push
 
-# 一个阶段收尾（比如"能跑通一次搬运"）→ 打标签
-git tag -a v0.3.0 -m "…" && git push origin v0.3.0
+# 一个阶段收尾（比如"能跑通一次搬运"）→ 用脚本打标签+推送+回读校验
+bash tools/release.sh v0.3.0 "能跑通完整一次搬运"
 ```
 
 **push 的频率不重要，commit 的粒度才重要。** 一次提交只做一件事：
 改结构就别顺手修 bug，修 bug 就别顺手重排版。这样将来 `git revert` 才干净。
+
+**标签不是每次提交都要打。** 只在"这一版可以拿给别人/给老师看/自己回滚到"
+的时候打。打太多等于没有版本概念。
 
 ---
 
