@@ -89,6 +89,7 @@ tools/
 
 maps/                 地图库（每张图一个目录：pgm + yaml + 点位 + 路线 + 任务）
 docs/                 文档
+docs/archive/         历史原文（逐项证据表、踩坑记录）
 ```
 
 只有 6 个运行入口：`web_console.launch.py`、`agv_stack.launch.py`、`navigation.launch.py`、
@@ -106,6 +107,7 @@ docs/                 文档
 | [`docs/GEOMETRY.md`](docs/GEOMETRY.md) | 车体/传感器、世界与地图范围、槽位、15 个点位、净空判据 |
 | [`docs/WEB_CONSOLE.md`](docs/WEB_CONSOLE.md) | 界面交互、27 条 API、栈管理、位姿/地图缓存、日志管道 |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | 三轮修复史与本次重构 |
+| [`docs/VERSIONING.md`](docs/VERSIONING.md) | 版本号与标签、推 GitHub 后为什么"看起来被覆盖"、回滚与后悔药 |
 
 历史原文（逐项证据表、踩坑记录）在 `docs/archive/`。
 

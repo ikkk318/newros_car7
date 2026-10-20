@@ -103,9 +103,11 @@ git show 提交编号
 
 ## 六、以后要不要传到网上（GitHub/Gitee）
 
-**暂时不用。** 现在仓库只在你本机，已经能起到"防丢、可回退"的作用。
-等你想备份到云端、或给老师看时，再学 `git remote` + `git push`——
-那是下一步的事，不影响现在。
+**已经传了。** 现状是 `origin = https://github.com/ikkk318/newros_car7.git`，
+`main` 分支已推送到远端。
+
+下文这篇是**当初建库时写的**，所以还写着"暂时不用"——保留原样作为归档，
+实际做法与操作细节见 [`../VERSIONING.md`](../VERSIONING.md)。
 
 ---
 
@@ -121,3 +123,7 @@ git show 提交编号
 
 *当前状态：2026-10-19 在 `newros_car7` 内独立建库（`git init -b main`），
 初始提交 `86706ea`，205 个文件入库，工作区干净，仓库 2.3M。*
+
+*2026-10-20 补：已推送 GitHub（`ikkk318/newros_car7`），`main` 共 8 个提交，
+已打 `v0.1.0`（首次上传状态）与 `v0.2.0`（结构重构后）两个标签。
+版本化流程见 [`../VERSIONING.md`](../VERSIONING.md)。*
