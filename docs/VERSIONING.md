@@ -139,12 +139,16 @@ git tag -l
 # ② 远程有没有（这才是 GitHub 页面显示的依据）
 git ls-remote --tags origin
 
-# ③ 本地有、②为空 → 就是没推上去，补推即可
-git push origin refs/tags/v0.1.0 refs/tags/v0.2.0
+# ③ 本地有、②为空 → 就是没推上去，一条命令全补推
+bash tools/release.sh --push-all
 ```
 
-**一次推全部标签**：`git push origin --tags`
-（注意：这会把本地所有标签都推上去，包括实验性的。只想推一个就指名道姓。）
+不想用脚本也行：
+
+```bash
+git push origin refs/tags/v0.1.0 refs/tags/v0.2.0   # 指名推两个
+git push origin --tags                              # 推全部（含实验性的，慎用）
+```
 
 **关于 Releases**：Releases 是**建立在标签之上的发布说明**，没有标签就永远没有
 Releases。标签推上去之后，Tags 页立刻有内容；想要带正文的 Release，

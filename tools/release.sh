@@ -12,6 +12,7 @@
 # 用法：
 #   bash tools/release.sh v0.2.1 "修复：中止后卡执行中"    # 给当前 HEAD 打标签并推送
 #   bash tools/release.sh v0.2.1                          # 说明省略则用最近一次提交标题
+#   bash tools/release.sh --push-all                      # 本地标签全补推（Tags 页空时用）
 #   bash tools/release.sh --list                          # 只看本地/远程标签对照
 # =============================================================================
 set -uo pipefail
@@ -43,13 +44,54 @@ if [ "${1:-}" = "--list" ]; then
     exit 0
 fi
 
+# ── 补推模式：把本地有、远程没有的标签全部推上去 ──────────────────────────────
+# 这是"打完标签但 GitHub 上是空的"最直接的解法。
+if [ "${1:-}" = "--push-all" ]; then
+    LOCAL_TAGS="$(git tag -l)"
+    if [ -z "$LOCAL_TAGS" ]; then
+        echo "本地一个标签都没有，先打标签："
+        echo "  bash tools/release.sh v0.1.0 \"说明\""
+        exit 1
+    fi
+    REMOTE_TAGS="$(git ls-remote --tags origin 2>/dev/null \
+        | sed 's#.*refs/tags/##' | grep -v '\^{}$' || true)"
+
+    MISSING=""
+    for t in $LOCAL_TAGS; do
+        printf '%s\n' "$REMOTE_TAGS" | grep -qx "$t" || MISSING="$MISSING $t"
+    done
+
+    if [ -z "$MISSING" ]; then
+        echo "✓ 本地标签都已在远程，无需补推"
+        exit 0
+    fi
+
+    echo "→ 待补推的标签：$MISSING"
+    # 逐个显式推（一次推多个也行，但逐个推失败时能看清是哪个）
+    for t in $MISSING; do
+        if git push origin "refs/tags/$t"; then
+            echo "  ✓ $t"
+        else
+            echo "  ✗ $t 推送失败（认证/网络）"
+            exit 1
+        fi
+    done
+
+    echo
+    echo "✓ 完成，回读远程确认："
+    git ls-remote --tags origin 2>/dev/null \
+        | sed 's#.*refs/tags/##' | grep -v '\^{}$' | sed 's/^/  /'
+    exit 0
+fi
+
 TAG="${1:-}"
 MSG="${2:-}"
 
 if [ -z "$TAG" ]; then
     echo "用法: bash tools/release.sh <标签名> [说明]"
     echo "例:   bash tools/release.sh v0.2.1 \"修复：中止后卡执行中\""
-    echo "      bash tools/release.sh --list"
+    echo "      bash tools/release.sh --push-all     # 把本地标签全补推到远程"
+    echo "      bash tools/release.sh --list         # 本地/远程标签对照"
     exit 1
 fi
 
@@ -59,11 +101,16 @@ case "$TAG" in
     *) echo "✗ 标签名建议用 v主.次.修 形式（如 v0.2.1），当前是：$TAG"; exit 1 ;;
 esac
 
-# 已存在就不重复打（避免悄悄改掉历史里程碑）
+# 已存在的标签不重复打（避免悄悄改掉历史里程碑），但**补推**是允许的：
+# 本地有、远程没有 = 上次没推成功，这里直接推上去，不用删了重打。
+TAG_EXISTS=0
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-    echo "✗ 标签 $TAG 已存在于本地。"
-    echo "  要改指向：git tag -d $TAG && git push origin :refs/tags/$TAG && 重跑"
-    exit 1
+    TAG_EXISTS=1
+    if git ls-remote --tags origin "refs/tags/$TAG" 2>/dev/null | grep -q .; then
+        echo "✓ $TAG 本地和远程都已存在，无需操作"
+        exit 0
+    fi
+    echo "→ $TAG 本地已存在但远程没有（上次没推成功），直接补推"
 fi
 
 # 工作区必须干净，否则标签指到的内容和你以为的不一样
@@ -84,8 +131,10 @@ if [ "$AHEAD" != "0" ]; then
     git push || { echo "✗ push 失败"; exit 1; }
 fi
 
-echo "→ 打 annotated 标签 $TAG → $(git rev-parse --short HEAD)"
-git tag -a "$TAG" -m "$MSG" || exit 1
+if [ "$TAG_EXISTS" = "0" ]; then
+    echo "→ 打 annotated 标签 $TAG → $(git rev-parse --short HEAD)"
+    git tag -a "$TAG" -m "$MSG" || exit 1
+fi
 
 # ★ 关键一步：显式推这个标签。不用 --follow-tags（它只管 annotated 且条件苛刻）
 echo "→ 推送标签 $TAG"
