@@ -123,7 +123,8 @@ if [ "${1:-}" = "--doctor" ]; then
         echo "  SSH 公钥         ✓ 已被 GitHub 接受"
     elif ssh_port_ok; then
         echo "  SSH 公钥         ✗ 端口通但公钥未注册（把下面这行加到 GitHub Settings → SSH keys）"
-        [ -f "$HOME/.ssh/id_ed25519.pub" ] && sed 's/^/                   /' "$HOME/.ssh/id_ed25519.pub"
+        # 2>/dev/null：万一公钥文件读不到，别让 sed 的报错盖住真正的结论
+        [ -f "$HOME/.ssh/id_ed25519.pub" ] && sed 's/^/                   /' "$HOME/.ssh/id_ed25519.pub" 2>/dev/null
     else
         echo "  SSH 公钥         — 端口不通，测不了"
     fi
